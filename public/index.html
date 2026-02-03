@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheme Saarthi - AI-Powered Government Benefits Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 0.5rem;
+        }
+
+        .tagline {
+            color: #6b7280;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .language-selector {
+            margin-bottom: 2rem;
+        }
+
+        .language-selector select {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .voice-interface {
+            margin-bottom: 2rem;
+        }
+
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .voice-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .voice-button.recording {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .status {
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+
+        .status.listening {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status.processing {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status.response {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .document-upload {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 10px;
+            background: #f9fafb;
+        }
+
+        .upload-button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+        }
+
+        .upload-button:hover {
+            background: #4f46e5;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .feature {
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-text {
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+
+        .response-area {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f3f4f6;
+            border-radius: 10px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">Scheme Saarthi</div>
+        <div class="tagline">योजना सारथी - AI-Powered Government Benefits Assistant</div>
+        
+        <div class="language-selector">
+            <select id="languageSelect">
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="te">తెలుగు (Telugu)</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="en">English</option>
+            </select>
+        </div>
+
+        <div class="voice-interface">
+            <button id="voiceButton" class="voice-button">
+                <div>🎤</div>
+                <div style="font-size: 0.8rem; margin-top: 0.5rem;">Tap to Speak</div>
+            </button>
+            
+            <div id="status" class="status hidden"></div>
+            <div id="responseArea" class="response-area hidden"></div>
+        </div>
+
+        <div class="document-upload">
+            <h3>📄 Document Verification</h3>
+            <p style="margin: 0.5rem 0; color: #6b7280;">Upload Aadhaar, Marksheet, or other documents</p>
+            <input type="file" id="documentInput" accept="image/*,.pdf" style="display: none;">
+            <button class="upload-button" onclick="document.getElementById('documentInput').click()">
+                📷 Upload Document
+            </button>
+            <button class="upload-button" id="sendPdfButton" style="background: #059669;">
+                📱 Send PDF via SMS
+            </button>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🗣️</div>
+                <div class="feature-text">Voice in Native Language</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-text">Smart Scheme Discovery</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">✅</div>
+                <div class="feature-text">Auto Document Verification</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📞</div>
+                <div class="feature-text">Human Support Available</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const voiceButton = document.getElementById('voiceButton');
+        const status = document.getElementById('status');
+        const responseArea = document.getElementById('responseArea');
+        const languageSelect = document.getElementById('languageSelect');
+        const documentInput = document.getElementById('documentInput');
+        const sendPdfButton = document.getElementById('sendPdfButton');
+
+        let isRecording = false;
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentSession = {
+            userProfile: {},
+            conversationHistory: [],
+            eligibilityData: null
+        };
+
+        // Voice recording functionality
+        voiceButton.addEventListener('click', toggleRecording);
+
+        async function toggleRecording() {
+            if (!isRecording) {
+                await startRecording();
+            } else {
+                stopRecording();
+            }
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    processVoiceInput(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                
+                voiceButton.classList.add('recording');
+                voiceButton.innerHTML = '<div>🔴</div><div style="font-size: 0.8rem; margin-top: 0.5rem;">Recording...</div>';
+                
+                showStatus('listening', 'Listening... Speak now');
+
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                showStatus('error', 'Microphone access denied');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                
+                isRecording = false;
+                voiceButton.classList.remove('recording');
+                voiceButton.innerHTML = '<div>🎤</div><div style="font-size: 0.8rem; margin-top: 0.5rem;">Tap to Speak</div>';
+                
+                showStatus('processing', 'Processing your request...');
+            }
+        }
+
+        async function processVoiceInput(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'voice-input.wav');
+            formData.append('language', languageSelect.value);
+            formData.append('sessionId', 'web-session-' + Date.now());
+
+            try {
+                const response = await fetch('/api/voice/process', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.escalated) {
+                    showStatus('response', result.text);
+                    showResponse(`🔄 ${result.text}`);
+                } else {
+                    showStatus('response', 'Response received');
+                    showResponse(result.text);
+                    
+                    // Store conversation
+                    currentSession.conversationHistory.push({
+                        user: result.transcription,
+                        ai: result.text,
+                        timestamp: new Date()
+                    });
+                }
+
+            } catch (error) {
+                console.error('Voice processing error:', error);
+                showStatus('error', 'Failed to process voice input');
+            }
+        }
+
+        // Document upload functionality
+        documentInput.addEventListener('change', handleDocumentUpload);
+
+        async function handleDocumentUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('document', file);
+            formData.append('documentType', 'general');
+            formData.append('language', languageSelect.value);
+
+            showStatus('processing', 'Analyzing document...');
+
+            try {
+                const response = await fetch('/api/documents/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('response', result.message);
+                    showResponse(`📄 Document Analysis:\n${JSON.stringify(result.extractedData, null, 2)}`);
+                    
+                    // Store extracted data for eligibility checking
+                    currentSession.userProfile = { ...currentSession.userProfile, ...result.extractedData };
+                } else {
+                    showStatus('error', result.message);
+                }
+
+            } catch (error) {
+                console.error('Document upload error:', error);
+                showStatus('error', 'Failed to analyze document');
+            }
+        }
+
+        // Send PDF via SMS
+        sendPdfButton.addEventListener('click', sendEligibilityPDF);
+
+        async function sendEligibilityPDF() {
+            const userPhone = prompt('Enter your phone number (with country code):');
+            if (!userPhone) return;
+
+            if (!currentSession.eligibilityData) {
+                // Generate eligibility data first
+                currentSession.eligibilityData = {
+                    userId: 'web-user-' + Date.now(),
+                    userProfile: currentSession.userProfile,
+                    eligibleSchemes: [
+                        {
+                            name: 'PM-KISAN Samman Nidhi',
+                            benefit: '₹6,000 per year',
+                            applicationUrl: 'https://pmkisan.gov.in'
+                        }
+                    ],
+                    requiredDocuments: ['Aadhaar Card', 'Bank Account Details', 'Land Records']
+                };
+            }
+
+            showStatus('processing', 'Generating and sending PDF...');
+
+            try {
+                const response = await fetch('/api/schemes/send-eligibility-pdf', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        userPhone,
+                        eligibilityData: currentSession.eligibilityData,
+                        language: languageSelect.value
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('response', 'PDF sent successfully via SMS!');
+                    showResponse(`📱 SMS sent to ${userPhone}\n📄 PDF URL: ${result.pdfUrl}`);
+                } else {
+                    showStatus('error', 'Failed to send PDF');
+                }
+
+            } catch (error) {
+                console.error('PDF SMS error:', error);
+                showStatus('error', 'Failed to send PDF via SMS');
+            }
+        }
+
+        function showStatus(type, message) {
+            status.className = `status ${type}`;
+            status.textContent = message;
+            status.classList.remove('hidden');
+        }
+
+        function showResponse(text) {
+            responseArea.textContent = text;
+            responseArea.classList.remove('hidden');
+        }
+
+        // Socket.io event handlers
+        socket.on('voice-response', (data) => {
+            showResponse(data.message);
+        });
+
+        socket.on('error', (data) => {
+            showStatus('error', data.message);
+        });
+
+        // Language change handler
+        languageSelect.addEventListener('change', () => {
+            const messages = {
+                hi: 'भाषा बदली गई। अब हिंदी में बोलें।',
+                te: 'భాష మార్చబడింది. ఇప్పుడు తెలుగులో మాట్లాడండి.',
+                ta: 'மொழி மாற்றப்பட்டது. இப்போது தமிழில் பேசுங்கள்.',
+                en: 'Language changed. You can now speak in English.'
+            };
+            
+            showStatus('response', messages[languageSelect.value]);
+        });
+    </script>
+</body>
+</html>
