@@ -1119,9 +1119,4 @@ async function invokeBedrockWithCache(prompt, modelId) {
 }
 ```
 
----
 
-**Document Version:** 1.0  
-**Last Updated:** February 2026  
-**Next Review:** March 2026  
-**Approved By:** Architecture Review Board
