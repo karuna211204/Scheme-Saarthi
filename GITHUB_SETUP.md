@@ -17,8 +17,8 @@
 After creating the repository, GitHub will show you the commands. Run these in your terminal:
 
 ```bash
-# Add the remote repository (replace YOUR_USERNAME with your GitHub username)
-git remote add origin https://github.com/YOUR_USERNAME/scheme-saarthi.git
+# Add the remote repository
+git remote add origin https://github.com/karuna211204/Scheme-Saarthi.git
 
 # Push the code to GitHub
 git branch -M main
@@ -36,8 +36,8 @@ git push -u origin main
 If you have GitHub CLI installed, you can create and push in one step:
 
 ```bash
-# Create repository and push (will prompt for repository details)
-gh repo create scheme-saarthi --public --source=. --remote=origin --push
+# Create repository and push
+gh repo create Scheme-Saarthi --public --source=. --remote=origin --push
 ```
 
 ## Repository Structure
@@ -78,5 +78,5 @@ scheme-saarthi/
 
 ---
 
-**Repository URL**: `https://github.com/YOUR_USERNAME/scheme-saarthi`
-**Clone Command**: `git clone https://github.com/YOUR_USERNAME/scheme-saarthi.git`
+**Repository URL**: `https://github.com/karuna211204/Scheme-Saarthi`
+**Clone Command**: `git clone https://github.com/karuna211204/Scheme-Saarthi.git`
