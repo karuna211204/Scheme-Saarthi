@@ -5,8 +5,8 @@
 **Project:** Scheme Saarthi - AI-Powered Government Benefit Sahayak  
 **Version:** 1.0.0  
 **Date:** February 2026  
-**Authors:** Engineering Team  
-**Reviewers:** Architecture Team, Product Team
+**Authors:** Next_gen_coders 
+
 
 ## Table of Contents
 
