@@ -16,13 +16,18 @@ Scheme Saarthi is built as a **modern, cloud-native, voice-first AI platform** d
 
 ### **Architecture Goals:**
 
-- ⚡ **Fast Response**: < 3 seconds for voice processing
+- ⚡ **Fast Response**
+: < 3 seconds for voice processing
 - 🔄 **High Availability**: 99.9% uptime
 - 📈 **Elastic Scaling**: Auto-scale based on demand
 - 🔒 **Data Security**: End-to-end encryption
 - 🌍 **Multi-Region**: Serve users across India
 
 ---
+
+## **PICTORIAL REPRESENTATION**
+
+<img width="3331" height="2086" alt="scheme_saarthi_architecture_enhanced" src="https://github.com/user-attachments/assets/6c4caa4f-d441-490e-a148-933ae9367d85" />
 
 ## 🏛️ **High-Level Architecture**
 
