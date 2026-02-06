@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "awslabs.aws-diagram-mcp-server": {
+      "command": "wsl.exe",
+      "args": [
+        "-u",
+        "karuna211204",
+        "bash",
+        "-c",
+        "/home/karuna211204/mcp_env/bin/python3 -m awslabs.aws_diagram_mcp_server.server"
+      ],
+      "env": {
+        "FASTMCP_LOG_LEVEL": "ERROR"
+      },
+      "disabled": false,
+      "autoApprove": []
+    }
+  }
+}
