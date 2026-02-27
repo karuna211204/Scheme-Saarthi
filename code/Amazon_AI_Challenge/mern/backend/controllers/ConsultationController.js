@@ -1,4 +1,4 @@
-const ConsultationRequest = require('../models/Appointment')
+const ConsultationRequest = require('../models/Consultation')
 const nodemailer = require('nodemailer');
 
 let transporterCache = null;

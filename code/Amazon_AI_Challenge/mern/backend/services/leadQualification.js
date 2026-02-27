@@ -4,9 +4,9 @@
  */
 
 const mongoose = require('mongoose');
-const Customer = mongoose.models.Customer || require('../models/Customer');
-const Appointment = mongoose.models.Appointment || require('../models/Appointment');
-const Warranty = mongoose.models.Warranty || require('../models/Warranty');
+const Citizen = mongoose.models.Citizen || require('../models/Citizen');
+const Consultation = mongoose.models.Consultation || require('../models/Consultation');
+const Application = mongoose.models.Application || require('../models/Application');
 
 /**
  * Ideal Customer Profile (ICP) Configuration
@@ -197,46 +197,46 @@ function calculateICPMatchScore(leadData, customerHistory = null) {
  */
 async function getCustomerEngagementHistory(phone) {
   try {
-    // Find customer by phone
-    const customer = await Customer.findOne({ phone });
+    // Find citizen by phone
+    const citizen = await Citizen.findOne({ phone });
 
-    if (!customer) {
+    if (!citizen) {
       return null; // New lead, no history
     }
 
-    // Get appointments (service history)
-    const appointments = await Appointment.find({ phone });
+    // Get consultations (service history)
+    const consultations = await Consultation.find({ phone });
 
-    // Get warranties (purchase history)
-    const warranties = await Warranty.find({ phone });
+    // Get applications (purchase history)
+    const applications = await Application.find({ phone });
 
     // Calculate engagement metrics
-    const past_purchases_count = warranties.length;
-    const total_spent = warranties.reduce((sum, w) => sum + (w.purchase_amount || 0), 0);
+    const past_purchases_count = applications.length;
+    const total_spent = applications.reduce((sum, w) => sum + (w.purchase_amount || 0), 0);
     const last_interaction_date = Math.max(
-      ...appointments.map(a => new Date(a.created_at).getTime()),
-      ...warranties.map(w => new Date(w.created_at).getTime())
+      ...consultations.map(a => new Date(a.created_at).getTime()),
+      ...applications.map(w => new Date(w.created_at).getTime())
     );
 
     // Check active warranty/AMC
     const now = new Date();
-    const has_active_warranty = warranties.some(w =>
+    const has_active_warranty = applications.some(w =>
       w.warranty_expiry && new Date(w.warranty_expiry) > now
     );
-    const has_amc = warranties.some(w => w.amc_enrolled === true);
+    const has_amc = applications.some(w => w.amc_enrolled === true);
 
     // Calculate engagement score (0-100)
     let engagement_score = 0;
-    engagement_score += Math.min(appointments.length * 5, 30); // Max 30 for appointments
+    engagement_score += Math.min(consultations.length * 5, 30); // Max 30 for consultations
     engagement_score += Math.min(past_purchases_count * 10, 40); // Max 40 for purchases
     if (has_active_warranty) engagement_score += 15;
     if (has_amc) engagement_score += 15;
     engagement_score = Math.min(engagement_score, 100);
 
     return {
-      customer_id: customer._id,
-      customer_name: customer.name,
-      email: customer.email,
+      customer_id: citizen._id,
+      customer_name: citizen.name,
+      email: citizen.email,
       past_purchases_count,
       total_spent,
       last_interaction_date: new Date(last_interaction_date),

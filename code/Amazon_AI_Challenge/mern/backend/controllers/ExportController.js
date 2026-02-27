@@ -1,7 +1,7 @@
-const Customer = require('../models/Customer');
-const Appointment = require('../models/Appointment');
-const Warranty = require('../models/Warranty');
-const SalesLead = require('../models/SalesLead');
+const Citizen = require('../models/Citizen');
+const Consultation = require('../models/Consultation');
+const Application = require('../models/Application');
+const SchemeInquiry = require('../models/SchemeInquiry');
 const Transcript = require('../models/Transcript');
 
 // Helper function to convert JSON to CSV
@@ -21,13 +21,13 @@ const jsonToCSV = (data, fields) => {
   return [headers, ...rows].join('\n');
 };
 
-// Export customers
+// Export citizens
 const exportCustomers = async (req, res) => {
   try {
-    const customers = await Customer.find().sort({ created_at: -1 }).lean();
+    const citizens = await Citizen.find().sort({ created_at: -1 }).lean();
     
     const fields = ['name', 'email', 'phone', 'address', 'date_created', 'status'];
-    const csv = jsonToCSV(customers, fields);
+    const csv = jsonToCSV(citizens, fields);
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=customers_${Date.now()}.csv`);
@@ -38,14 +38,14 @@ const exportCustomers = async (req, res) => {
   }
 };
 
-// Export appointments
+// Export consultations
 const exportAppointments = async (req, res) => {
   try {
-    const appointments = await Appointment.find().sort({ created_at: -1 }).lean();
+    const consultations = await Consultation.find().sort({ created_at: -1 }).lean();
     
     const fields = ['customer_name', 'phone', 'email', 'appointment_date', 'appointment_time', 
                    'product_name', 'issue_description', 'status', 'assigned_agent', 'created_at'];
-    const csv = jsonToCSV(appointments, fields);
+    const csv = jsonToCSV(consultations, fields);
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=appointments_${Date.now()}.csv`);
@@ -56,10 +56,10 @@ const exportAppointments = async (req, res) => {
   }
 };
 
-// Export warranties
+// Export applications
 const exportWarranties = async (req, res) => {
   try {
-    const warranties = await Warranty.find().sort({ created_at: -1 }).lean();
+    const applications = await Application.find().sort({ created_at: -1 }).lean();
     
     const fields = ['phone', 'product_name', 'product_category', 'serial_number', 'invoice_id',
                    'purchase_date', 'warranty_expiry', 'amc_enrolled', 'amc_expiry'];
@@ -74,14 +74,14 @@ const exportWarranties = async (req, res) => {
   }
 };
 
-// Export sales leads
+// Export scheme inquiries
 const exportSalesLeads = async (req, res) => {
   try {
-    const leads = await SalesLead.find().sort({ created_at: -1 }).lean();
+    const inquiries = await SchemeInquiry.find().sort({ created_at: -1 }).lean();
     
     const fields = ['customer_name', 'email', 'phone', 'product_interest', 'source', 
                    'status', 'lead_score', 'icp_match_score', 'qualification_status', 'created_at'];
-    const csv = jsonToCSV(leads, fields);
+    const csv = jsonToCSV(inquiries, fields);
     
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename=sales_leads_${Date.now()}.csv`);

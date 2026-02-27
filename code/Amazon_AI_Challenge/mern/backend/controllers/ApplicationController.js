@@ -1,4 +1,4 @@
-const Application = require('../models/Warranty'); // Using Warranty model file which is now Application
+const Application = require('../models/Application');
 
 const checkEligibility = async (req, res) => {
   try {

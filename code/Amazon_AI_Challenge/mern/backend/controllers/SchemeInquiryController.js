@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const SchemeInquiry = mongoose.models.SchemeInquiry || require('../models/SalesLead');
+const SchemeInquiry = mongoose.models.SchemeInquiry || require('../models/SchemeInquiry');
 
 const createSchemeInquiry = async (req, res) => {
   try {

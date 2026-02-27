@@ -1,4 +1,4 @@
-const Citizen = require('../models/Customer'); // Using Customer model file which is now Citizen
+const Citizen = require('../models/Citizen');
 
 const getCitizenByPhone = async (req, res) => {
   try {
