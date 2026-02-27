@@ -6,15 +6,15 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AdminPanel from './pages/AdminPanel';
 import AdminManagement from './pages/AdminManagement';
-import CustomerOverview from './pages/CustomerOverview';
+import CitizenOverview from './pages/CitizenOverview';
 import CallTranscriptViewer from './pages/CallTranscriptViewer';
-import Appointments from './pages/Appointments';
-import SalesLeads from './pages/SalesLeads';
-import CustomerProfile from './pages/CustomerProfile';
+import Consultations from './pages/Consultations';
+import SchemeInquiries from './pages/SchemeInquiries';
+import CitizenProfile from './pages/CitizenProfile';
 import LiveKitRooms from './pages/LiveKitRooms';
-import MyDevices from './pages/MyDevices';
-import TrackRepair from './pages/TrackRepair';
-import SupportHistory from './pages/SupportHistory';
+import MyApplications from './pages/MyApplications';
+import TrackApplication from './pages/TrackApplication';
+import MySchemes from './pages/MySchemes';
 import Header from './components/Header';
 import Footer from './components/Footer';
 
@@ -95,9 +95,9 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/applications" element={<ProtectedRoute><MyDevices /></ProtectedRoute>} />
-          <Route path="/track-status" element={<ProtectedRoute><TrackRepair /></ProtectedRoute>} />
-          <Route path="/my-schemes" element={<ProtectedRoute><SupportHistory /></ProtectedRoute>} />
+          <Route path="/applications" element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
+          <Route path="/track-status" element={<ProtectedRoute><TrackApplication /></ProtectedRoute>} />
+          <Route path="/my-schemes" element={<ProtectedRoute><MySchemes /></ProtectedRoute>} />
 
           <Route
             path="/"
@@ -108,16 +108,16 @@ function App() {
             }
           >
             <Route index element={<Navigate to="/profile" />} />
-            <Route path="profile" element={<CustomerProfile />} />
+            <Route path="profile" element={<CitizenProfile />} />
             
             {/* Admin-only routes */}
             <Route path="dashboard" element={<AdminRoute><Dashboard /></AdminRoute>} />
             <Route path="admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
             <Route path="admin-management" element={<AdminRoute><AdminManagement /></AdminRoute>} />
-            <Route path="citizens" element={<AdminRoute><CustomerOverview /></AdminRoute>} />
+            <Route path="citizens" element={<AdminRoute><CitizenOverview /></AdminRoute>} />
             <Route path="transcripts" element={<AdminRoute><CallTranscriptViewer /></AdminRoute>} />
-            <Route path="consultations" element={<AdminRoute><Appointments /></AdminRoute>} />
-            <Route path="inquiries" element={<AdminRoute><SalesLeads /></AdminRoute>} />
+            <Route path="consultations" element={<AdminRoute><Consultations /></AdminRoute>} />
+            <Route path="inquiries" element={<AdminRoute><SchemeInquiries /></AdminRoute>} />
             <Route path="livekit-rooms" element={<AdminRoute><LiveKitRooms /></AdminRoute>} />
           </Route>
 
