@@ -28,22 +28,51 @@ Scheme Saarthi is a voice-first AI Agent acting as a personalized "Caseworker" f
 
 ## Quick Start
 
+### Backend Setup
 ```bash
+cd code/Amazon_AI_Challenge/mern/backend
 npm install
 cp .env.example .env
-# Configure your AWS credentials
-npm run dev
+# Configure MongoDB and AWS credentials
+npm start
+```
+
+### Frontend Setup
+```bash
+cd code/Amazon_AI_Challenge/mern/frontend
+npm install
+npm start
+```
+
+### AI Agent Setup
+```bash
+cd code/Amazon_AI_Challenge/ai-agent
+pip install -r requirements.txt
+python main.py
 ```
 
 ## Features
 
-- 🗣️ Vernacular voice interface
-- 📚 MCP-powered scheme search
-- ✅ Auto-verification with document OCR
-- 🌐 Multi-language support (Hindi, Telugu, Tamil)
+- 🗣️ Vernacular voice interface (Hindi, Telugu, Tamil)
+- 📚 MCP-powered scheme search with RAG
+- ✅ Auto-verification with document OCR (Amazon Textract)
+- 🌐 Multi-language support with Amazon Transcribe & Polly
 - 📱 WhatsApp integration ready
-- 📞 SIP-based human customer care escalation
+- 📞 SIP/LiveKit-based voice consultations
 - 📄 SMS-based PDF document sharing
+- 👥 Citizen portal for application tracking
+- 📊 Admin dashboard for consultation management
+- 🔍 Scheme inquiry and eligibility checking
+
+## Tech Stack
+
+- **Frontend**: React 19.2.0, TailwindCSS 3.4.18, React Router 6.30.2
+- **Backend**: Node.js/Express, MongoDB, JWT Authentication
+- **AI Models**: Amazon Bedrock (Claude 3.5 Sonnet), Google Gemini
+- **Voice**: LiveKit, Twilio SIP, Amazon Transcribe/Polly
+- **Knowledge Base**: ChromaDB RAG, MCP (Model Context Protocol)
+- **Document Processing**: Amazon Textract
+- **Deployment**: PM2, Docker
 
 ## Impact
 
