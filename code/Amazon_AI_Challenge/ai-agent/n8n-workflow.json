@@ -1,0 +1,210 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "guntur-electronics-webhook",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "46959c15-8482-47b4-bc0f-8f22d4b0966a",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -272,
+        128
+      ],
+      "webhookId": "guntur-electronics-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "rules",
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "book_appointment_with_calendar",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "book_appointment"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "switch-node",
+      "name": "Route by Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -64,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "calendar": "primary",
+        "start": "={{ $json.body.appointment_date }}T{{ $json.body.appointment_time }}:00",
+        "end": "={{ $json.body.appointment_date }}T{{ new Date(new Date($json.body.appointment_date + 'T' + $json.body.appointment_time + ':00').getTime() + 60*60*1000).toISOString().substring(11, 16) }}:00",
+        "additionalFields": {
+          "attendees": "={{ [$json.body.email] }}",
+          "description": "=Customer: {{ $json.body.customer_name }}\nPhone: {{ $json.body.phone }}\nEmail: {{ $json.body.email }}\nIssue: {{ $json.body.reason }}\nProduct: {{ $json.body.product_name || 'N/A' }}\nAddress: {{ $json.body.address || 'N/A' }}\nTechnician: {{ $json.body.contact_person || 'Service Team' }}",
+          "sendUpdates": "all",
+          "summary": "=Technician Visit - {{ $json.body.customer_name }}"
+        }
+      },
+      "id": "814cbb24-eb5a-4461-887f-6c2a408db5ca",
+      "name": "Google Calendar Create Event",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1,
+      "position": [
+        144,
+        16
+      ],
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "OSLeC1NCLn927cp0",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1o2bMspZbcvYgWQ5CE6wWZMgsMMFblQEYJtFYqj1MPdE",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Appointments",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "appointment_id": "=APT-{{ $now.format('YYYYMMDDHHmmss') }}",
+            "timestamp": "={{ $now.toISO() }}",
+            "customer_name": "={{ $('Webhook').item.json.body.customer_name }}",
+            "phone": "={{ $('Webhook').item.json.body.phone }}",
+            "email": "={{ $('Webhook').item.json.body.email }}",
+            "appointment_date": "={{ $('Webhook').item.json.body.appointment_date }}",
+            "appointment_time": "={{ $('Webhook').item.json.body.appointment_time }}",
+            "reason": "={{ $('Webhook').item.json.body.reason }}",
+            "technician": "={{ $('Webhook').item.json.body.contact_person || 'Service Team' }}",
+            "product": "={{ $('Webhook').item.json.body.product_name || 'N/A' }}",
+            "status": "Scheduled",
+            "calendar_event_id": "={{ $node['Google Calendar Create Event'].json.id }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "3ffb4ffb-46b1-4399-a8ca-4ddd036c3847",
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        336,
+        16
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "WWw2RrIMuR5yOssz",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  status: 'success',\n  message: 'Service appointment booked in Google Calendar and saved to sheets',\n  appointment_id: 'APT-' + $now.format('YYYYMMDDHHmmss'),\n  calendar_event_id: $node['Google Calendar Create Event'].json.id,\n  customer_name: $('Webhook').item.json.body.customer_name,\n  appointment_date: $('Webhook').item.json.body.appointment_date,\n  appointment_time: $('Webhook').item.json.body.appointment_time\n} }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "73a8d44c-a093-4387-8bbb-2c9b9e398194",
+      "name": "Response - Appointment",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        544,
+        16
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Route by Action",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Action": {
+      "main": [
+        [
+          {
+            "node": "Google Calendar Create Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Calendar Create Event": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Response - Appointment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1d170d35ef4366e373fb28ff91b2a3ee3479c0ff8be97a6a08cc8d4f7eb60260"
+  }
+}

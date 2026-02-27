@@ -1,0 +1,15 @@
+const express = require('express');
+const router = express.Router();
+const CitizenController = require('../controllers/CitizenController');
+const { protect } = require('../middleware/auth');
+
+// Public routes (for voice agent and citizen self-service)
+router.get('/phone/:phone', CitizenController.getCitizenByPhone);
+router.post('/', CitizenController.createCitizen);
+router.put('/phone/:phone', CitizenController.updateCitizen);
+
+// Protected routes (admin only)
+router.get('/', protect, CitizenController.getAllCitizens);
+router.delete('/phone/:phone', protect, CitizenController.deleteCitizen);
+
+module.exports = router;

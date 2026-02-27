@@ -1,0 +1,83 @@
+# OS
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+Desktop.ini
+
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Node / JavaScript
+node_modules/
+.pnpm-store/
+.npm/
+.cache/
+dist/
+build/
+coverage/
+.next/
+out/
+.eslintcache
+
+# React/Vite project artifacts
+**/frontend/build/
+**/frontend/.cache/
+**/frontend/.parcel-cache/
+**/frontend/.vite/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.dylib
+*.egg-info/
+*.egg
+.eggs/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.hypothesis/
+.coverage
+.coverage.*
+.cache/
+pip-wheel-metadata/
+.tox/
+.venv/
+venv/
+env/
+ENV/
+.ipynb_checkpoints/
+
+# Project-specific generated data
+rag-server/.env
+mern/backend/.env
+mern/frontend/.env
+ai-agent/.env
+
+# IDEs
+.idea/
+*.iml
+
+# Local data
+*.sqlite
+*.db
+*.db-journal
+
+# Misc
+*.swp
+*.swo
