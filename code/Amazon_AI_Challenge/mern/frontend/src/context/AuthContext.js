@@ -14,10 +14,37 @@ export const useAuth=() => {
 export const AuthProvider=({ children }) => {
   const [user, setUser]=useState(() => {
     const savedUser=localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
+    if (!savedUser || savedUser === 'undefined' || savedUser === 'null') {
+      return null;
+    }
+    try {
+      return JSON.parse(savedUser);
+    } catch (err) {
+      console.error('Failed to parse saved user:', err);
+      return null;
+    }
   });
-  const [token, setToken]=useState(localStorage.getItem('token'));
+  const [token, setToken]=useState(() => {
+    const savedToken=localStorage.getItem('token');
+    if (!savedToken || savedToken === 'undefined' || savedToken === 'null') {
+      return null;
+    }
+    return savedToken;
+  });
   const [loading, setLoading]=useState(true);
+
+  // Cleanup invalid localStorage on mount
+  useEffect(() => {
+    const savedUser=localStorage.getItem('user');
+    const savedToken=localStorage.getItem('token');
+    
+    if (savedUser === 'undefined' || savedUser === 'null') {
+      localStorage.removeItem('user');
+    }
+    if (savedToken === 'undefined' || savedToken === 'null') {
+      localStorage.removeItem('token');
+    }
+  }, []);
 
   useEffect(() => {
     if (token) {

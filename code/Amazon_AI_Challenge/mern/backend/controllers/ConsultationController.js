@@ -1,4 +1,4 @@
-const ConsultationRequest = require('../models/Consultation')
+const ConsultationRequest = require('../models/Consultation');
 const nodemailer = require('nodemailer');
 
 let transporterCache = null;
@@ -140,7 +140,7 @@ const saveTranscript = async (req, res) => {
 
     console.log('✅ Transcript saved to consultation:', consultation._id);
     console.log('='.repeat(60));
-    return res.json(appointment);
+    return res.json(consultation);
   } catch (err) {
     console.error('❌ Error saving transcript:', err);
     return res.status(500).json({ error: err.message });

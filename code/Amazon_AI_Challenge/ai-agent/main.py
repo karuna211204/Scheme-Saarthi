@@ -223,7 +223,7 @@ async def entrypoint(ctx: agents.JobContext):
         logger.info(f"📊 Total tools available: {len(tools)}")
         
         # Get n8n webhook URL from environment
-        n8n_webhook_url = os.getenv("N8N_WEBHOOK_URL", "https://d2svfu6tjqm2v.cloudfront.net/webhook/guntur-electronics-webhook")
+        n8n_webhook_url = os.getenv("N8N_WEBHOOK_URL", "https://schemesaarthi-webhook.example.com/webhook")
         logger.info(f"🔗 n8n Webhook URL: {n8n_webhook_url}")
         
         # Build citizen context BEFORE creating agent
@@ -406,8 +406,8 @@ IMPORTANT:
         # Transcript auto-save removed (legacy flow). Keep in-memory transcript only.
         
         # Audio-only mode - no video input from users
-        # The session will only process audio tracks from customers
-        # Avatar video (Simli) is still sent to customers for visual feedback
+        # The session will only process audio tracks from citizens
+        # Avatar video (Simli) is still sent to citizens for visual feedback
         
         # Add handler for tool results to detect transfer
         @session.on("agent_speech_committed")
@@ -426,15 +426,24 @@ IMPORTANT:
             except Exception as e:
                 logger.error(f"❌ Error in speech committed handler: {e}")
         
-        # Add disconnect handler to save transcript
+        # Add disconnect handler to save transcript and cleanup session
         @ctx.room.on("participant_disconnected")
         def on_participant_disconnected(participant: rtc.RemoteParticipant):
-            """Save transcript when participant disconnects"""
+            """Save transcript and cleanup session when participant disconnects"""
             try:
                 logger.info("="*60)
                 logger.info(f"👋 Participant disconnected: {participant.identity}")
                 logger.info("="*60)
                 
+                # Perform session cleanup
+                asyncio.create_task(cleanup_session_on_disconnect(participant))
+                
+            except Exception as e:
+                logger.error(f"❌ Error in disconnect handler: {e}", exc_info=True)
+        
+        async def cleanup_session_on_disconnect(participant):
+            """Async cleanup when participant disconnects"""
+            try:
                 # Get the transcript
                 transcript_text = agent.get_transcript()
                 
@@ -447,54 +456,80 @@ IMPORTANT:
                     citizen_id = agent.citizen_id
                     logger.info(f"🆔 Citizen ID: {citizen_id}")
                     
-                    # Call backend API asynchronously
-                    async def save_to_backend():
-                        try:
-                            import aiohttp
-                            backend_url = os.getenv("BACKEND_URL", "http://localhost:5000")
+                    # Call backend API to save transcript
+                    try:
+                        import aiohttp
+                        backend_url = os.getenv("BACKEND_URL", "http://localhost:5000")
+                        
+                        logger.info(f"📞 Saving transcript for citizen_id: {citizen_id}")
+                        
+                        # Save to new transcripts collection with citizen details
+                        async with aiohttp.ClientSession() as http_session:
+                            save_url = f"{backend_url}/api/transcripts"
+                            payload = {
+                                "citizen_id": citizen_id,
+                                "transcript": transcript_text,
+                                "phone": citizen_phone,  # Include phone
+                                "citizen_name": citizen_name  # Include name
+                            }
                             
-                            logger.info(f"📞 Saving transcript for citizen_id: {citizen_id}")
+                            logger.info(f"📞 POST {save_url}")
+                            logger.info(f"🆔 Citizen ID: {citizen_id}")
+                            logger.info(f"👤 Citizen Name: {citizen_name}")
+                            logger.info(f"📱 Phone: {citizen_phone}")
+                            logger.info(f"📝 Transcript length: {len(transcript_text)} chars")
                             
-                            # Save to new transcripts collection with citizen details
-                            async with aiohttp.ClientSession() as http_session:
-                                save_url = f"{backend_url}/api/transcripts"
-                                payload = {
-                                    "citizen_id": citizen_id,
-                                    "transcript": transcript_text,
-                                    "phone": citizen_phone,  # Include phone
-                                    "citizen_name": citizen_name  # Include name
-                                }
-                                
-                                logger.info(f"📞 POST {save_url}")
-                                logger.info(f"🆔 Citizen ID: {citizen_id}")
-                                logger.info(f"👤 Citizen Name: {citizen_name}")
-                                logger.info(f"📱 Phone: {citizen_phone}")
-                                logger.info(f"📝 Transcript length: {len(transcript_text)} chars")
-                                
-                                async with http_session.post(
-                                    save_url,
-                                    json=payload,
-                                    timeout=aiohttp.ClientTimeout(total=10)
-                                ) as response:
-                                    if response.status == 200:
-                                        result = await response.json()
-                                        logger.info("✅ Transcript saved successfully!")
-                                        logger.info(f"📋 Transcript ID: {result.get('_id', 'N/A')}")
-                                    else:
-                                        error_text = await response.text()
-                                        logger.error(f"❌ Failed to save transcript: {response.status} - {error_text}")
-                            
-                        except Exception as e:
-                            logger.error(f"❌ Error saving transcript: {e}", exc_info=True)
-                    
-                    # Schedule the async save
-                    asyncio.create_task(save_to_backend())
-                    
+                            async with http_session.post(
+                                save_url,
+                                json=payload,
+                                timeout=aiohttp.ClientTimeout(total=10)
+                            ) as response:
+                                if response.status == 200:
+                                    result = await response.json()
+                                    logger.info("✅ Transcript saved successfully!")
+                                    logger.info(f"📋 Transcript ID: {result.get('_id', 'N/A')}")
+                                else:
+                                    error_text = await response.text()
+                                    logger.error(f"❌ Failed to save transcript: {response.status} - {error_text}")
+                        
+                    except Exception as e:
+                        logger.error(f"❌ Error saving transcript: {e}", exc_info=True)
                 else:
                     logger.info("ℹ️ No significant transcript to save")
+                
+                # Clean up LiveKit session
+                try:
+                    import aiohttp
+                    backend_url = os.getenv("BACKEND_URL", "http://localhost:5000")
+                    
+                    # Notify backend to end the LiveKit session
+                    async with aiohttp.ClientSession() as http_session:
+                        cleanup_url = f"{backend_url}/api/livekit/end-call"
+                        payload = {
+                            "roomName": room_name,
+                            "participant_identity": agent.agent_identity
+                        }
+                        
+                        logger.info(f"🧹 Cleaning up LiveKit session: {room_name}")
+                        async with http_session.post(
+                            cleanup_url,
+                            json=payload,
+                            timeout=aiohttp.ClientTimeout(total=10)
+                        ) as response:
+                            if response.ok:
+                                result = await response.json()
+                                logger.info("✅ LiveKit session cleaned up successfully")
+                            else:
+                                logger.warning(f"⚠️ LiveKit cleanup response: {response.status}")
+                            
+                except Exception as e:
+                    logger.error(f"❌ Error cleaning up LiveKit session: {e}")
+                
+                # Final cleanup
+                logger.info("✅ Session cleanup completed")
                     
             except Exception as e:
-                logger.error(f"❌ Error in disconnect handler: {e}", exc_info=True)
+                logger.error(f"❌ Error in session cleanup: {e}", exc_info=True)
         
         # Start the session
         logger.info("🚀 Starting agent session...")

@@ -32,7 +32,7 @@ mcp = FastMCP("schemesaarthi-agent-server")
 
 # Backend API URL
 BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
-N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "https://d2svfu6tjqm2v.cloudfront.net/webhook/guntur-electronics-webhook")
+N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "https://schemesaarthi-webhook.example.com/webhook")
 logger.info(f"📊 Using backend API: {BACKEND_URL}")
 logger.info(f"🔗 Using n8n webhook: {N8N_WEBHOOK_URL}")
 
@@ -133,7 +133,7 @@ async def check_consultation_availability(date_str: str, time_str: str, window_m
         
         # Call backend API
         result = await call_backend_api(
-            "/api/appointments/check-availability",
+            "/api/consultations/check-availability",
             method="POST",
             data={
                 "date_str": date_str,
@@ -195,15 +195,15 @@ async def book_consultation(
         
         # Call backend API
         result = await call_backend_api(
-            "/api/appointments/book",
+            "/api/consultations/book",
             method="POST",
             data={
-                "customer_name": citizen_name,
+                "citizen_name": citizen_name,
                 "phone": phone,
                 "email": email,
-                "appointment_date": consultation_date,
-                "appointment_time": consultation_time,
-                "customer_id": citizen_id,
+                "consultation_date": consultation_date,
+                "consultation_time": consultation_time,
+                "citizen_id": citizen_id,
                 "consultation_type": consultation_type,
                 "notes": notes
             }
@@ -301,7 +301,7 @@ async def schedule_consultation(
             query_description="Need help filling PM-KISAN application form",
             preferred_date="2026-03-15",
             preferred_time="14:00",
-            district="Guntur",
+            district="Jaipur",
             consultation_type="application_support",
             preferred_language="Telugu"
         )
@@ -318,25 +318,24 @@ async def schedule_consultation(
         
         consultation_data = {
             "phone": citizen_phone,
-            "customer_name": citizen_name,
+            "citizen_name": citizen_name,
             "email": email,
-            "appointment_date": preferred_date,
-            "appointment_time": preferred_time,
+            "consultation_date": preferred_date,
+            "consultation_time": preferred_time,
             "issue_description": query_description,
-            "address": district,
-            "product_name": consultation_type,
-            "appointment_type": consultation_type,
+            "district": district,
+            "consultation_type": consultation_type,
             "status": "scheduled",
             "preferred_language": preferred_language
         }
         
         result = await call_backend_api(
-            "/api/appointments",
+            "/api/consultations",
             method="POST",
             data=consultation_data
         )
         
-        consultation_id=result.get('appointment', {}).get('_id', 'unknown')
+        consultation_id=result.get('consultation', {}).get('_id', 'unknown')
         logger.info(f"✅ Consultation scheduled successfully! ID: {consultation_id}")
         logger.info("="*60)
         
@@ -392,16 +391,16 @@ async def create_scheme_inquiry(
         
         inquiry_data = {
             "phone": citizen_phone,
-            "customer_name": citizen_name,
-            "lead_type": inquiry_type,
-            "product_interest": interested_schemes,
+            "citizen_name": citizen_name,
+            "inquiry_type": inquiry_type,
+            "interested_schemes": interested_schemes,
             "notes": notes,
             "status": "open",
             "follow_up_date": (datetime.now() + timedelta(days=1)).isoformat()
         }
         
         result = await call_backend_api(
-            "/api/salesleads",
+            "/api/scheme-inquiries",
             method="POST",
             data=inquiry_data
         )
@@ -452,18 +451,18 @@ async def get_pending_applications(days_threshold: int = 7) -> str:
         }, default=str)
         
     except Exception as e:
-        logger.error(f"❌ Error fetching expiring warranties: {e}", exc_info=True)
+        logger.error(f"❌ Error fetching pending applications: {e}", exc_info=True)
         return json.dumps({
             "error": str(e),
             "count": 0,
-            "warranties": []
+            "applications": []
         })
 
 
 @mcp.tool()
 def send_sms(to: str, body: str) -> str:
     """
-    Send SMS to customer using Twilio.
+    Send SMS to citizen using Twilio.
     
     Args:
         to: Phone number in E.164 format (e.g., +15105550100)
@@ -533,48 +532,48 @@ def send_sms(to: str, body: str) -> str:
 
 @mcp.tool()
 def send_gmail_confirmation(
-    customer_name: str,
+    citizen_name: str,
     phone: str,
     email: str,
-    appointment_date: str,
-    appointment_time: str,
+    consultation_date: str,
+    consultation_time: str,
     reason: str = "",
-    contact_person: str = "Service Team"
+    contact_person: str = "SchemeSaarthi Support Team"
 ) -> str:
     """
-    Send appointment confirmation by calling n8n webhook that creates Google Calendar event.
+    Send consultation confirmation by calling n8n webhook that creates Google Calendar event.
     
     Args:
-        customer_name: Customer name
+        citizen_name: Citizen name
         phone: Phone number
         email: Email address
-        appointment_date: Appointment date in YYYY-MM-DD format
-        appointment_time: Appointment time in HH:MM format
-        reason: Reason for appointment (optional)
-        contact_person: Contact person name (default: Service Team)
+        consultation_date: Consultation date in YYYY-MM-DD format
+        consultation_time: Consultation time in HH:MM format
+        reason: Reason for consultation (optional)
+        contact_person: Contact person name (default: SchemeSaarthi Support Team)
     
     Returns:
         JSON string with send status and appointment details
     """
     try:
         logger.info("="*50)
-        logger.info(f"📧 SENDING APPOINTMENT CONFIRMATION to {email}")
-        logger.info(f"👤 Customer: {customer_name}")
-        logger.info(f"📅 Date/Time: {appointment_date} {appointment_time}")
+        logger.info(f"📧 SENDING CONSULTATION CONFIRMATION to {email}")
+        logger.info(f"👤 Citizen: {citizen_name}")
+        logger.info(f"📅 Date/Time: {consultation_date} {consultation_time}")
         logger.info(f"👥 Contact: {contact_person}")
         logger.info("="*50)
         
         # Call n8n webhook
-        n8n_webhook_url = os.getenv("N8N_WEBHOOK_URL", "https://n8n-nightly-tmr6.onrender.com/webhook/guntur-electronics-webhook")
+        n8n_webhook_url = os.getenv("N8N_WEBHOOK_URL", "https://schemesaarthi-webhook.example.com/webhook")
         
         import requests
         payload = {
-            "action": "book_appointment_with_calendar",
-            "customer_name": customer_name,
+            "action": "book_consultation_with_calendar",
+            "citizen_name": citizen_name,
             "phone": phone,
             "email": email,
-            "appointment_date": appointment_date,
-            "appointment_time": appointment_time,
+            "consultation_date": consultation_date,
+            "consultation_time": consultation_time,
             "reason": reason,
             "contact_person": contact_person
         }
@@ -584,13 +583,13 @@ def send_gmail_confirmation(
         response.raise_for_status()
         
         result = response.json()
-        logger.info(f"✅ Appointment confirmed and calendar event created")
+        logger.info(f"✅ Consultation confirmed and calendar event created")
         logger.info(f"📋 Response: {result}")
         logger.info("="*50)
         
         return json.dumps({
             "status": "success",
-            "message": "Appointment booked in Google Calendar and confirmation sent",
+            "message": "Consultation booked in Google Calendar and confirmation sent",
             **result
         })
         
@@ -603,29 +602,29 @@ def send_gmail_confirmation(
 
 
 @mcp.tool()
-async def update_customer_phone(
+async def update_citizen_phone(
     user_id: str,
     phone: str,
-    customer_name: str = ""
+    citizen_name: str = ""
 ) -> str:
     """
-    Update customer's phone number in the database.
-    Call this IMMEDIATELY when customer provides their phone number during conversation.
+    Update citizen's phone number in the database.
+    Call this IMMEDIATELY when citizen provides their phone number during conversation.
     
     Args:
-        user_id: Customer's user ID from Google OAuth
-        phone: Phone number provided by customer (format: +91XXXXXXXXXX or any format)
-        customer_name: Customer's name (optional)
+        user_id: Citizen's user ID from Google OAuth
+        phone: Phone number provided by citizen (format: +91XXXXXXXXXX or any format)
+        citizen_name: Citizen's name (optional)
     
     Returns:
         JSON string with update status
     """
     try:
         logger.info("="*60)
-        logger.info(f"📞 UPDATING CUSTOMER PHONE")
+        logger.info(f"📞 UPDATING CITIZEN PHONE")
         logger.info(f"🆔 User ID: {user_id}")
         logger.info(f"📱 Phone: {phone}")
-        logger.info(f"👤 Name: {customer_name}")
+        logger.info(f"👤 Name: {citizen_name}")
         logger.info("="*60)
         
         # Call backend API to update phone
@@ -635,7 +634,7 @@ async def update_customer_phone(
             data={
                 "user_id": user_id,
                 "phone": phone,
-                "name": customer_name
+                "name": citizen_name
             }
         )
         
@@ -657,99 +656,99 @@ async def update_customer_phone(
 
 
 @mcp.tool()
-async def get_customer_history(phone: str) -> str:
+async def get_citizen_history(phone: str) -> str:
     """
-    **Retrieve customer's complete history including past appointments, warranties, and transcripts.**
+    **Retrieve citizen's complete history including past consultations, applications, and transcripts.**
     
-    Use this tool to cross-reference past transactions and provide personalized support.
-    This addresses the problem statement requirement for "cross-referencing past transactions".
+    Use this tool to cross-reference past interactions and provide personalized support.
+    This addresses the requirement for "citizen interaction history tracking".
     
     When to use:
-    - Customer asks: "What was my last appointment?"
-    - Customer says: "Check my warranty status"
-    - Customer mentions previous service: "Last time the technician came..."
-    - You need context about customer's history
+    - Citizen asks: "What was my last consultation?"
+    - Citizen says: "Check my application status"
+    - Citizen mentions previous interaction: "Last time I applied for PM-KISAN..."
+    - You need context about citizen's history
     
     Args:
-        phone: Customer's phone number (must be exact match from database)
+        phone: Citizen's phone number (must be exact match from database)
     
     Returns:
-        JSON string with complete customer history:
-        - past_appointments: List of previous service visits
-        - active_warranties: Current warranty coverage
+        JSON string with complete citizen history:
+        - past_consultations: List of previous consultation sessions
+        - active_applications: Current scheme applications
         - conversation_history: Past AI conversation summaries
-        - last_service_date: Most recent interaction date
+        - last_interaction_date: Most recent interaction date
     
     Example:
         get_customer_history(phone="+919876543210")
     """
     try:
         logger.info("="*60)
-        logger.info(f"📚 FETCHING CUSTOMER HISTORY")
+        logger.info(f"📚 FETCHING CITIZEN HISTORY")
         logger.info(f"📱 Phone: {phone}")
         logger.info("="*60)
         
-        # Fetch appointments
-        appointments_result = await call_backend_api(f"/api/appointments/phone/{phone}")
-        appointments = appointments_result if isinstance(appointments_result, list) else []
+        # Fetch consultations
+        consultations_result = await call_backend_api(f"/api/consultations/phone/{phone}")
+        consultations = consultations_result if isinstance(consultations_result, list) else []
         
-        # Fetch warranties
-        warranties_result = await call_backend_api(f"/api/warranties/phone/{phone}")
-        warranties = warranties_result.get("warranties", []) if isinstance(warranties_result, dict) else []
+        # Fetch applications
+        applications_result = await call_backend_api(f"/api/applications/phone/{phone}")
+        applications = applications_result.get("applications", []) if isinstance(applications_result, dict) else []
         
         # Fetch transcripts (all transcripts, filter by phone if available)
         transcripts_result = await call_backend_api("/api/transcripts")
         all_transcripts = transcripts_result if isinstance(transcripts_result, list) else []
-        customer_transcripts = [t for t in all_transcripts if t.get("phone") == phone]
+        citizen_transcripts = [t for t in all_transcripts if t.get("phone") == phone]
         
         # Build summary
         summary = {
-            "customer_phone": phone,
-            "total_appointments": len(appointments),
-            "total_warranties": len(warranties),
-            "total_conversations": len(customer_transcripts),
-            "past_appointments": [
+            "citizen_phone": phone,
+            "total_consultations": len(consultations),
+            "total_applications": len(applications),
+            "total_conversations": len(citizen_transcripts),
+            "past_consultations": [
                 {
-                    "date": apt.get("appointment_date"),
-                    "time": apt.get("appointment_time"),
-                    "product": apt.get("product_name", "Service"),
-                    "issue": apt.get("issue_description", ""),
-                    "status": apt.get("status", "unknown"),
-                    "visit_charge": apt.get("visit_charge", 300)
+                    "date": cons.get("consultation_date"),
+                    "time": cons.get("consultation_time"),
+                    "type": cons.get("consultation_type", "General"),
+                    "query": cons.get("issue_description", ""),
+                    "status": cons.get("status", "unknown")
                 }
-                for apt in appointments[:5]  # Last 5 appointments
+                for cons in consultations[:5]  # Last 5 consultations
             ],
-            "active_warranties": [
+            "active_applications": [
                 {
-                    "product": w.get("product_name"),
-                    "invoice": w.get("invoice_id"),
-                    "expiry_date": w.get("warranty_end_date"),
-                    "is_active": w.get("status") == "ACTIVE"
+                    "scheme": app.get("scheme_name"),
+                    "category": app.get("category"),
+                    "status": app.get("status"),
+                    "applied_date": app.get("application_date"),
+                    "is_active": app.get("status") in ["submitted", "under_review"]
                 }
-                for w in warranties
+                for app in applications
             ],
             "recent_conversations": [
                 {
                     "date": t.get("updated_at"),
-                    "session_id": t.get("customer_id"),
+                    "session_id": t.get("citizen_id"),
                     "summary": t.get("transcript", "")[:200] + "..." if len(t.get("transcript", "")) > 200 else t.get("transcript", "")
                 }
-                for t in customer_transcripts[:3]  # Last 3 conversations
+                for t in citizen_transcripts[:3]  # Last 3 conversations
             ],
-            "last_service_date": appointments[0].get("appointment_date") if appointments else None
+            "last_interaction_date": consultations[0].get("consultation_date") if consultations else None
         }
         
-        logger.info(f"✅ Found {len(appointments)} appointments, {len(warranties)} warranties, {len(customer_transcripts)} conversations")
+        logger.info(f"✅ Found {len(consultations)} consultations, {len(applications)} applications, {len(citizen_transcripts)} conversations")
         logger.info("="*60)
         
         return json.dumps(summary, indent=2)
         
     except Exception as e:
-        logger.error(f"❌ Error fetching customer history: {e}", exc_info=True)
+        logger.error(f"❌ Error fetching citizen history: {e}", exc_info=True)
         return json.dumps({
             "status": "error",
             "error": f"Failed to fetch history: {str(e)}",
-            "customer_phone": phone
+            "citizen_phone": phone
         })
 
 
@@ -835,7 +834,7 @@ async def _execute_transfer(room_name: str, ai_agent_identity: str) -> str:
 
 
 @mcp.tool()
-async def connect_to_customer_agent(room_name: str, ai_agent_identity: str) -> str:
+async def connect_to_scheme_advisor(room_name: str, ai_agent_identity: str) -> str:
     """
     🔄 Transfer call to human scheme advisor/agent
     
@@ -847,6 +846,7 @@ async def connect_to_customer_agent(room_name: str, ai_agent_identity: str) -> s
     
     🗣️ Say to citizen BEFORE calling:
     "Main abhi ek scheme advisor ko connect kar rahi hoon... ek minute dijiye..."
+    (I'm connecting you to a scheme advisor... one moment...)
     
     Returns:
         JSON with transfer status

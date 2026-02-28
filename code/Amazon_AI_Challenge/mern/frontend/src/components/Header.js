@@ -15,13 +15,13 @@ const Header = () => {
     return (
         <header className="w-full border-b border-[#e6e6db] dark:border-[#3a3928] bg-surface-light/80 dark:bg-surface-dark/80 backdrop-blur-md sticky top-0 z-40 transition-colors duration-300">
             <div className="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
-                <Link to={user?.role === 'admin' ? '/dashboard' : '/profile'} className="flex items-center gap-3 group">
+                <Link to="/home" className="flex items-center gap-3 group">
                     <div className="flex items-center justify-center size-10 rounded-full bg-black dark:bg-primary text-primary dark:text-black">
-                        <span className="material-symbols-outlined">{user?.role === 'admin' ? 'admin_panel_settings' : 'account_balance'}</span>
+                        <span className="material-symbols-outlined">account_balance</span>
                     </div>
                     <div className="flex flex-col">
                         <h2 className="text-xl font-bold tracking-tight leading-none">Scheme Saarthi</h2>
-                        <span className="text-[10px] uppercase tracking-widest font-semibold opacity-60">{user?.role === 'admin' ? 'Admin Console' : 'नागरिक पोर्टल'}</span>
+                        <span className="text-[10px] uppercase tracking-widest font-semibold opacity-60">{user?.role === 'admin' ? 'Admin Console' : 'Citizen Portal'}</span>
                     </div>
                 </Link>
                 {user?.role === 'admin' ? (

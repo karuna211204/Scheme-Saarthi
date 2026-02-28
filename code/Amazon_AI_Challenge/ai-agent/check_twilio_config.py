@@ -74,7 +74,7 @@ print("="*60)
 
 print("\n1. Fix Twilio trunk (add Origination URI)")
 print("2. Wait 1-2 minutes")
-print("3. Run: python sip.py --to +919949214499 --customer-name Test")
+print("3. Run: python sip.py --to +919949214499 --citizen-name Test")
 print("4. Check Twilio logs immediately after")
 print("5. Should see call attempt in logs now")
 

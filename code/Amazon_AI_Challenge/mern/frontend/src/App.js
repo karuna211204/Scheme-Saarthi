@@ -91,8 +91,8 @@ const AdminLayout = () => {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
+        <AuthProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/home" element={<Home />} />
           <Route path="/applications" element={<ProtectedRoute><MyApplications /></ProtectedRoute>} />
@@ -121,8 +121,8 @@ function App() {
             <Route path="livekit-rooms" element={<AdminRoute><LiveKitRooms /></AdminRoute>} />
           </Route>
 
-        </Routes>
-      </AuthProvider>
+          </Routes>
+        </AuthProvider>
     </BrowserRouter>
   );
 }

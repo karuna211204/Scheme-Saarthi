@@ -76,7 +76,7 @@ const VoiceAgent = ({ onClose, onVoiceAction }) => {
                             <FiMessageCircle size={20} />
                         </div>
                         <div>
-                            <h3 className="font-semibold">Guntur Electronics</h3>
+                            <h3 className="font-semibold">Scheme Saarthi</h3>
                             <p className="text-xs text-green-100 capitalize">{state || 'Connecting...'}</p>
                         </div>
                     </div>
@@ -145,7 +145,7 @@ const VoiceAgent = ({ onClose, onVoiceAction }) => {
                         </div>
                         <div>
                             <p className="text-sm font-semibold text-gray-700">Namaste! 🙏</p>
-                            <p className="text-xs text-gray-500 mt-1">Start speaking to fix appliances, book appointments, or check warranty</p>
+                            <p className="text-xs text-gray-500 mt-1">Discover schemes, check eligibility, or book consultations</p>
                         </div>
                     </div>
                 )}
@@ -223,7 +223,7 @@ const AIAgentButton = () => {
         try {
             setIsConnecting(true);
             const params=new URLSearchParams({
-                name: user?.name || 'customer',
+                name: user?.name || 'citizen',
                 email: user?.email || '',
                 phone: user?.phone || '',
                 user_id: user?.id || ''
@@ -240,11 +240,16 @@ const AIAgentButton = () => {
                 throw new Error(`Failed to fetch token: ${response.status}`);
             }
 
-            const tokenText = await response.text();
-            console.log('🎟️  Token received successfully!');
+            const tokenData = await response.json();
+            console.log('🎟️  Token data received successfully!');
+            console.log('🎟️  Token data:', tokenData);
+            
+            const tokenText = tokenData.token;
+            console.log('🎟️  JWT Token extracted:', tokenText.substring(0, 50) + '...');
             console.log('🎟️  Token length:', tokenText.length, 'characters');
-            console.log('🎟️  Token preview:', tokenText.substring(0, 50) + '...');
-            console.log('🎟️  Token type:', typeof tokenText);
+            console.log('🎟️  Room:', tokenData.room);
+            console.log('🎟️  Identity:', tokenData.identity);
+            console.log('🎟️  Expires in:', tokenData.expires_in, 'seconds');
 
             if (!tokenText || tokenText.length < 10) {
                 throw new Error('Invalid token received from server');
@@ -294,7 +299,7 @@ const AIAgentButton = () => {
                     onClick={handleConnect}
                     disabled={isConnecting}
                     className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-green-600 to-green-700 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-all duration-300 hover:shadow-green-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Talk to AI Customer Support"
+                    title="Talk to AI Scheme Advisor"
                 >
                     {isConnecting ? (
                         <div className="animate-spin rounded-full h-7 w-7 border-b-2 border-white"></div>
@@ -315,7 +320,7 @@ const AIAgentButton = () => {
                     {isConnecting ? (
                         <div className="flex flex-col items-center justify-center h-full p-8">
                             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mb-4"></div>
-                            <h2 className="text-xl font-semibold text-gray-700">Connecting to Customer Support...</h2>
+                            <h2 className="text-xl font-semibold text-gray-700">Connecting to Scheme Advisor...</h2>
                             <p className="text-sm text-gray-500 mt-2">Please wait...</p>
                             <button
                                 onClick={handleClose}
@@ -363,7 +368,7 @@ const AIAgentButton = () => {
                                     console.log('✅ [LIVEKIT] ROOM CONNECTED SUCCESSFULLY!');
                                     console.log('✅ ========================================');
                                     console.log('✅ Server URL:', process.env.REACT_APP_LIVEKIT_URL);
-                                    console.log('✅ Room Name: customer-support');
+                                    console.log('✅ Room Name: scheme-support');
                                     console.log('✅ User:', user?.name);
                                     console.log('✅ Audio Settings: Optimized for low latency');
                                     console.log('✅ Agent should now join...');

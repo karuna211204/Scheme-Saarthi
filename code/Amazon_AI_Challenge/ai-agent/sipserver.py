@@ -1,6 +1,6 @@
 """
-SIP Call Server - FastAPI Server for Outbound Sales Calls
-Handles campaign-based outbound calling with festival offers and promotions
+SIP Call Server - FastAPI Server for Outbound Awareness Calls
+Handles campaign-based outbound calling for scheme awareness and benefit notifications
 """
 
 from fastapi import FastAPI, HTTPException
@@ -27,7 +27,7 @@ logger = logging.getLogger(__name__)
 # Initialize FastAPI
 app = FastAPI(
     title="Scheme Saarthi SIP Server",
-    description="Outbound sales call server for festival campaigns and promotions",
+    description="Outbound awareness call server for government scheme campaigns and benefit notifications",
     version="1.0.0"
 )
 
@@ -46,13 +46,13 @@ BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000")
 
 # ========== Request Models ==========
 
-class SalesCallRequest(BaseModel):
-    customer_phone: str = Field(..., description="Customer phone number in E.164 format")
-    customer_name: str = Field(..., description="Customer full name")
-    campaign_type: str = Field(..., description="Campaign type: festival_offer, warranty_expiry, amc_renewal, new_product_launch")
-    festival_name: Optional[str] = Field("", description="Festival name (e.g., Sankranti, Diwali, Ugadi)")
-    offer_details: Optional[str] = Field("", description="Specific offer details")
-    product_interest: Optional[str] = Field("", description="Product customer might be interested in")
+class AwarenessCallRequest(BaseModel):
+    citizen_phone: str = Field(..., description="Citizen phone number in E.164 format")
+    citizen_name: str = Field(..., description="Citizen full name")
+    campaign_type: str = Field(..., description="Campaign type: scheme_awareness, deadline_reminder, application_status, document_required")
+    scheme_name: Optional[str] = Field("", description="Scheme name (e.g., PM-KISAN, PMAY-G, Ayushman Bharat)")
+    message_details: Optional[str] = Field("", description="Specific message details")
+    scheme_category: Optional[str] = Field("", description="Scheme category (Agriculture, Education, Healthcare)")
 
 
 # ========== Helper Functions ==========
@@ -80,7 +80,7 @@ async def root():
         "status": "running",
         "version": "1.0.0",
         "endpoints": {
-            "initiate_call": "POST /initiate-sales-call or POST /sip/initiate-sales-call",
+            "initiate_call": "POST /initiate-awareness-call or POST /sip/initiate-awareness-call",
             "health": "GET /health or GET /sip/health"
         }
     }
@@ -111,73 +111,73 @@ async def health_check_sip():
     return await health_check()
 
 
-@app.post("/sip/initiate-sales-call")
-async def initiate_sales_call_sip(request: SalesCallRequest):
-    """Initiate sales call (CloudFront /sip prefix)"""
-    return await initiate_sales_call(request)
+@app.post("/sip/initiate-awareness-call")
+async def initiate_awareness_call_sip(request: AwarenessCallRequest):
+    """Initiate awareness call (CloudFront /sip prefix)"""
+    return await initiate_awareness_call(request)
 
 
-@app.post("/initiate-sales-call")
-async def initiate_sales_call(request: SalesCallRequest):
+@app.post("/initiate-awareness-call")
+async def initiate_awareness_call(request: AwarenessCallRequest):
     """
-    Initiate an outbound sales call for proactive campaigns.
-    This creates a sales lead, then starts a SIP call via LiveKit.
+    Initiate an outbound awareness call for proactive scheme campaigns.
+    This creates a scheme inquiry, then starts a SIP call via LiveKit.
     
     Example:
     {
-        "customer_phone": "+919999999999",
-        "customer_name": "Ramesh Kumar",
-        "campaign_type": "festival_offer",
-        "festival_name": "Sankranti",
-        "offer_details": "30% off + Free installation on all washing machines",
-        "product_interest": "Washing Machine"
+        "citizen_phone": "+919999999999",
+        "citizen_name": "Ramesh Kumar",
+        "campaign_type": "scheme_awareness",
+        "scheme_name": "PM-KISAN",
+        "message_details": "You may be eligible for ₹6000/year direct cash benefit",
+        "scheme_category": "Agriculture"
     }
     """
     try:
         logger.info("📞"*25)
-        logger.info(f"📱 INITIATING SALES CALL")
-        logger.info(f"   Customer: {request.customer_name}")
-        logger.info(f"   Phone: {request.customer_phone}")
+        logger.info(f"📱 INITIATING AWARENESS CALL")
+        logger.info(f"   Citizen: {request.citizen_name}")
+        logger.info(f"   Phone: {request.citizen_phone}")
         logger.info(f"   Campaign: {request.campaign_type}")
-        if request.festival_name:
-            logger.info(f"   Festival: {request.festival_name}")
-        if request.offer_details:
-            logger.info(f"   Offer: {request.offer_details}")
+        if request.scheme_name:
+            logger.info(f"   Scheme: {request.scheme_name}")
+        if request.message_details:
+            logger.info(f"   Message: {request.message_details}")
         logger.info("📞"*25)
         
         # Create campaign context
         campaign_context = {
-            "customer_phone": request.customer_phone,
-            "customer_name": request.customer_name,
+            "citizen_phone": request.citizen_phone,
+            "citizen_name": request.citizen_name,
             "campaign_type": request.campaign_type,
-            "festival_name": request.festival_name,
-            "offer_details": request.offer_details,
-            "product_interest": request.product_interest,
+            "scheme_name": request.scheme_name,
+            "message_details": request.message_details,
+            "scheme_category": request.scheme_category,
             "call_initiated_at": datetime.now().isoformat()
         }
         
-        # Create sales lead record in backend
-        lead_notes = f"Outbound call initiated for {request.campaign_type}"
-        if request.festival_name:
-            lead_notes += f" - {request.festival_name} campaign"
-        if request.offer_details:
-            lead_notes += f". Offer: {request.offer_details}"
+        # Create scheme inquiry record in backend
+        inquiry_notes = f"Outbound call initiated for {request.campaign_type}"
+        if request.scheme_name:
+            inquiry_notes += f" - {request.scheme_name}"
+        if request.message_details:
+            inquiry_notes += f". Message: {request.message_details}"
         
-        lead_result = await call_backend_api(
-            "/api/salesleads",
+        inquiry_result = await call_backend_api(
+            "/api/scheme-inquiries",
             method="POST",
             data={
-                "phone": request.customer_phone,
-                "customer_name": request.customer_name,
-                "lead_type": request.campaign_type,
-                "product_interest": request.product_interest,
-                "notes": lead_notes,
+                "phone": request.citizen_phone,
+                "citizen_name": request.citizen_name,
+                "scheme_id": request.scheme_name or "general",
+                "scheme_category": request.scheme_category,
+                "notes": inquiry_notes,
                 "status": "calling",
                 "campaign_context": campaign_context
             }
         )
         
-        logger.info(f"✅ Sales lead created: {lead_result.get('_id')}")
+        logger.info(f"✅ Scheme inquiry created: {inquiry_result.get('_id')}")
         
         # Call sip.py as subprocess to initiate the call
         # Use sys.executable to get the current Python interpreter (from venv)
@@ -185,8 +185,8 @@ async def initiate_sales_call(request: SalesCallRequest):
         cmd = [
             sys.executable,  # This will use the virtual environment's Python
             os.path.join(os.path.dirname(__file__), "sip.py"),
-            "--to", request.customer_phone,
-            "--customer-name", request.customer_name
+            "--to", request.citizen_phone,
+            "--citizen-name", request.citizen_name
         ]
         
         logger.info(f"🔌 Calling sip.py subprocess: {' '.join(cmd)}")
@@ -199,7 +199,7 @@ async def initiate_sales_call(request: SalesCallRequest):
                 detail={
                     "success": False,
                     "error": proc.stderr.strip(),
-                    "lead_id": str(lead_result.get('_id'))
+                    "inquiry_id": str(inquiry_result.get('_id'))
                 }
             )
         
@@ -218,14 +218,14 @@ async def initiate_sales_call(request: SalesCallRequest):
         return {
             "success": True,
             "call_initiated": True,
-            "customer_name": request.customer_name,
-            "customer_phone": request.customer_phone,
+            "citizen_name": request.citizen_name,
+            "citizen_phone": request.citizen_phone,
             "campaign_type": request.campaign_type,
-            "festival_name": request.festival_name,
-            "offer_details": request.offer_details,
+            "scheme_name": request.scheme_name,
+            "message_details": request.message_details,
             "room": call_data.get('room'),
-            "lead_id": str(lead_result.get('_id')),
-            "message": f"Outbound call initiated to {request.customer_name} for {request.campaign_type}",
+            "inquiry_id": str(inquiry_result.get('_id')),
+            "message": f"Outbound awareness call initiated to {request.citizen_name} for {request.campaign_type}",
             "call_details": call_data
         }
         

@@ -58,11 +58,11 @@ async def health_check(request):
         "timestamp": datetime.now().isoformat(),
         "documents_count": stats.get('count', 0),
         "tools_available": [
-            "search_schemes",
+            "search_scheme_knowledge",
             "search_scheme_by_category",
             "check_eligibility",
             "search_schemes_by_benefit",
-            "get_scheme_details"
+            "get_scheme_knowledge"
         ]
     })
 
@@ -80,10 +80,10 @@ async def root(request):
 # ========== RAG MCP Tools ==========
 
 @mcp.tool()
-def search_schemes(query: str, n_results: int = 5) -> str:
+def search_scheme_knowledge(query: str, n_results: int = 5) -> str:
     """
-    Search for government schemes using natural language query.
-    Use this for general scheme discovery based on citizen needs.
+    Search the government schemes knowledge base using natural language query.
+    Use this for detailed scheme information from documents and policies.
     
     The system understands queries like: "schemes for farmers", "education scholarships", "housing for poor"
     
@@ -92,12 +92,12 @@ def search_schemes(query: str, n_results: int = 5) -> str:
         n_results: Number of schemes to return (default 5)
     
     Returns:
-        Relevant government schemes with eligibility criteria and benefits
+        Detailed scheme information from government documents and knowledge base
     
     Examples:
-        search_schemes(query="schemes for farmers in Andhra Pradesh")
-        search_schemes(query="scholarships for SC/ST students")
-        search_schemes(query="pension schemes for senior citizens")
+        search_scheme_knowledge(query="schemes for farmers in Andhra Pradesh")
+        search_scheme_knowledge(query="scholarships for SC/ST students")
+        search_scheme_knowledge(query="pension schemes for senior citizens")
     """
     try:
         logger.info("="*60)
@@ -292,19 +292,20 @@ def search_schemes_by_benefit(benefit_type: str, min_amount: int = 0) -> str:
 
 
 @mcp.tool()
-def get_scheme_details(scheme_id_or_name: str) -> str:
+def get_scheme_knowledge(scheme_id_or_name: str) -> str:
     """
-    Get detailed information about a specific government scheme.
+    Get detailed knowledge base information about a specific government scheme.
+    Uses RAG (Retrieval Augmented Generation) to fetch comprehensive scheme details.
     
     Args:
         scheme_id_or_name: Scheme ID or name (e.g., "PM-KISAN", "Ayushman Bharat")
     
     Returns:
-        Complete scheme details including benefits, eligibility, application process, documents
+        Complete scheme details from knowledge base including benefits, eligibility, application process, documents
     
     Example:
-        get_scheme_details(scheme_id_or_name="PM-KISAN")
-        get_scheme_details(scheme_id_or_name="Pradhan Mantri Awas Yojana")
+        get_scheme_knowledge(scheme_id_or_name="PM-KISAN")
+        get_scheme_knowledge(scheme_id_or_name="Pradhan Mantri Awas Yojana")
     """
     try:
         query = f"{scheme_id_or_name} complete details benefits eligibility documents application process"

@@ -1,23 +1,22 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const livekitRoutes=require('./routes/LivekitRoutes')
-const consultationRoutes=require('./routes/ConsultationRoutes')
-const citizenRoutesOld=require('./routes/CitizenRoutes_old')
-const applicationRoutesOld=require('./routes/ApplicationRoutes_old')
-const schemeInquiryRoutesOld=require('./routes/SchemeInquiryRoutes_old')
-const transcriptRoutes=require('./routes/TranscriptRoutes')
-const authRoutes=require('./routes/AuthRoutes');
-const exportRoutes=require('./routes/ExportRoutes');
-const phoneUpdateController=require('./controllers/PhoneUpdateController');
+const mongoose = require('mongoose');
+
+dotenv.config();
 
 // Scheme Saarthi Routes
-const applicationRoutes=require('./routes/ApplicationRoutes');
-const citizenRoutes=require('./routes/CitizenRoutes');
-const schemeRoutes=require('./routes/SchemeRoutes');
-const schemeInquiryRoutes=require('./routes/SchemeInquiryRoutes');
-const mongoose = require('mongoose');
-dotenv.config();
+const livekitRoutes = require('./routes/LivekitRoutes');
+const consultationRoutes = require('./routes/ConsultationRoutes');
+const transcriptRoutes = require('./routes/TranscriptRoutes');
+const authRoutes = require('./routes/AuthRoutes');
+const exportRoutes = require('./routes/ExportRoutes');
+const phoneUpdateController = require('./controllers/PhoneUpdateController');
+const applicationRoutes = require('./routes/ApplicationRoutes');
+const citizenRoutes = require('./routes/CitizenRoutes');
+const schemeRoutes = require('./routes/SchemeRoutes');
+const schemeInquiryRoutes = require('./routes/SchemeInquiryRoutes');
+const userProfileRoutes = require('./routes/UserProfileRoutes');
 
 const app = express();
 
@@ -34,21 +33,22 @@ app.use((req, res, next) => {
 app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-app.use('/api/livekit',livekitRoutes)
-app.use('/api/consultations',consultationRoutes)
-app.use('/api/customers',citizenRoutesOld)
-app.use('/api/warranties',applicationRoutesOld)
-app.use('/api/salesleads',schemeInquiryRoutesOld)
-app.use('/api/transcripts',transcriptRoutes)
+// Scheme Saarthi API Endpoints
+app.use('/api/livekit', livekitRoutes);
+app.use('/api/consultations', consultationRoutes);
+app.use('/api/transcripts', transcriptRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/export', exportRoutes);
 app.post('/api/auth/update-phone', phoneUpdateController.updatePhoneByUserId);
 
-// Scheme Saarthi Endpoints
+// Core Scheme Saarthi Endpoints
 app.use('/api/applications', applicationRoutes);
 app.use('/api/citizens', citizenRoutes);
 app.use('/api/schemes', schemeRoutes);
 app.use('/api/scheme-inquiries', schemeInquiryRoutes);
+
+// Enhanced User Profile Endpoints
+app.use('/api/profile', userProfileRoutes);
 
 app.get('/health', (req, res) => {
   res.json({

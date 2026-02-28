@@ -1,40 +1,40 @@
-const User=require('../models/User');
-const jwt=require('jsonwebtoken');
-const { OAuth2Client }=require('google-auth-library');
+const User = require('../models/User');
+const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
-const client=new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
-const googleAuth=async (req, res) => {
+const googleAuth = async (req, res) => {
   try {
     console.log('='.repeat(60));
     console.log('🔐 GOOGLE AUTH');
     console.log('Request Body:', req.body);
     console.log('='.repeat(60));
 
-    const { token }=req.body;
+    const { token } = req.body;
     
     if (!token) {
       return res.status(400).json({ error: 'Token is required' });
     }
 
     // Verify Google token
-    const ticket=await client.verifyIdToken({
+    const ticket = await client.verifyIdToken({
       idToken: token,
       audience: process.env.GOOGLE_CLIENT_ID
     });
 
-    const payload=ticket.getPayload();
-    const { sub: google_id, email, name, picture }=payload;
+    const payload = ticket.getPayload();
+    const { sub: google_id, email, name, picture } = payload;
 
     console.log('✅ Google token verified');
     console.log('Email:', email);
     console.log('Name:', name);
 
     // Find or create user
-    let user=await User.findOne({ google_id });
+    let user = await User.findOne({ google_id });
 
     if (!user) {
-      user=new User({
+      user = new User({
         google_id,
         email,
         name,
@@ -45,13 +45,13 @@ const googleAuth=async (req, res) => {
       await user.save();
       console.log('➕ New user created:', user._id);
     } else {
-      user.last_login=new Date();
+      user.last_login = new Date();
       await user.save();
       console.log('👤 Existing user logged in:', user._id);
     }
 
     // Generate JWT
-    const jwtToken=jwt.sign(
+    const jwtToken = jwt.sign(
       { userId: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
@@ -79,9 +79,9 @@ const googleAuth=async (req, res) => {
   }
 };
 
-const getProfile=async (req, res) => {
+const getProfile = async (req, res) => {
   try {
-    const user=await User.findById(req.userId);
+    const user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -102,10 +102,10 @@ const getProfile=async (req, res) => {
   }
 };
 
-const updateProfile=async (req, res) => {
+const updateProfile = async (req, res) => {
   try {
-    const { phone }=req.body;
-    const user=await User.findByIdAndUpdate(
+    const { phone } = req.body;
+    const user = await User.findByIdAndUpdate(
       req.userId,
       { phone, updated_at: new Date() },
       { new: true }
@@ -128,4 +128,4 @@ const updateProfile=async (req, res) => {
   }
 };
 
-module.exports={ googleAuth, getProfile, updateProfile };
+module.exports = { googleAuth, getProfile, updateProfile };

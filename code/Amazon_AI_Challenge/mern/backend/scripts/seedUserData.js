@@ -1,14 +1,29 @@
 /**
+ * ⚠️ DEPRECATED SCRIPT - DO NOT USE ⚠️
+ * This script is from the old device warranty system and is not compatible 
+ * with the current SchemeSaarthi government schemes platform.
+ * 
+ * Use seedGovernmentSchemes.js and seedGovernmentDocuments.js instead.
+ * 
  * Script to seed sample data for specific users
  * Usage: node scripts/seedUserData.js
  */
 
+console.error('⚠️  ERROR: This script is deprecated and should not be used.');
+console.error('Please use the following scripts instead:');
+console.error('  - node seedGovernmentSchemes.js');
+console.error('  - node seedGovernmentDocuments.js');
+console.error('  - node seedSchemeSaarthiData.js');
+process.exit(1);
+
+/* DEPRECATED CODE BELOW - KEPT FOR REFERENCE ONLY
+
 require('dotenv').config();
 const mongoose = require('mongoose');
-const User = require('../Models/User');
-const Appointment = require('../Models/Appointment');
-const Warranty = require('../Models/Warranty');
-const Transcript = require('../Models/Transcript');
+const User = require('../models/User');
+const Consultation = require('../models/Consultation');
+const Application = require('../models/Application');
+const Transcript = require('../models/Transcript');
 
 const TARGET_EMAILS = ['abhiram050904@gmail.com', 'abhi3.02638@gmail.com', 'karunasreegorrepati@gmail.com'];
 

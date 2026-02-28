@@ -1,8 +1,8 @@
-const express=require('express');
-const router=express.Router();
-const { googleAuth, getProfile, updateProfile }=require('../controllers/AuthController');
-const { authenticate }=require('../middleware/auth');
-const User=require('../models/User');
+const express = require('express');
+const router = express.Router();
+const { googleAuth, getProfile, updateProfile } = require('../controllers/AuthController');
+const { authenticate } = require('../middleware/auth');
+const User = require('../models/User');
 
 router.post('/google', googleAuth);
 router.get('/profile', authenticate, getProfile);

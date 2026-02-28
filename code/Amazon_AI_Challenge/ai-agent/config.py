@@ -37,14 +37,14 @@ class Settings(BaseSettings):
     
     # Google Sheets (removed - using MongoDB only)
     
-    # WhatsApp (Optional)
+    # WhatsApp (Optional - currently disabled)
     whatsapp_api_token: Optional[str] = None
     whatsapp_phone_id: Optional[str] = None
     
-    # Business Logic
-    visit_charge_amount: int = 300
-    amc_annual_cost: int = 999
-    warranty_days_threshold: int = 7  # Days before expiry to trigger sales call
+    # SchemeSaarthi Business Logic
+    default_consultation_duration_minutes: int = 30
+    application_reminder_days_threshold: int = 7  # Days before deadline to send reminder
+    max_schemes_per_query: int = 10  # Maximum schemes to return in search results
     
     class Config:
         env_file = ".env"

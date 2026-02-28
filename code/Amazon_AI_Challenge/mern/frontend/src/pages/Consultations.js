@@ -60,7 +60,7 @@ const Appointments = () => {
     // Filter appointments based on search and filters
     const filteredAppointments = appointments.filter(appt => {
         const matchesSearch = searchTerm === '' ||
-            appt.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appt.citizen_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appt.product_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appt.issue_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appt._id?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -228,9 +228,9 @@ const Appointments = () => {
                                     <tr key={appt._id} className="group hover:bg-[#f8f8f5] dark:hover:bg-[#3a3928]/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold text-xs">{appt.customer_name.split(' ').map(n=>n[0]).join('')}</div>
+                                                <div className="size-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-300 font-bold text-xs">{appt.citizen_name.split(' ').map(n=>n[0]).join('')}</div>
                                                 <div>
-                                                    <div className="font-semibold text-text-light dark:text-text-dark">{appt.customer_name}</div>
+                                                    <div className="font-semibold text-text-light dark:text-text-dark">{appt.citizen_name}</div>
                                                     <div className="text-xs text-[#8c8b5f]">#{appt._id.slice(-6)}</div>
                                                 </div>
                                             </div>

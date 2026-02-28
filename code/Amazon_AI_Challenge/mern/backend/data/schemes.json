@@ -1,0 +1,703 @@
+{
+  "schemes": [
+    {
+      "id": "pm-kisan",
+      "name": "PM-KISAN Samman Nidhi",
+      "category": "agriculture",
+      "ministry": "Ministry of Agriculture and Farmers Welfare",
+      "launchDate": "2019-02-24",
+      "objective": "To provide income support to farmer families to supplement their financial needs for procuring various inputs related to agriculture and allied activities as well as domestic needs.",
+      "benefits": [
+        {
+          "amount": "6000",
+          "period": "year",
+          "description": "₹6,000 per year in three equal installments of ₹2,000 each"
+        }
+      ],
+      "eligibility": [
+        "Small and marginal farmers holding cultivable land up to 2 hectares",
+        "Farmer families who own cultivable land as per land records",
+        "Both landowner farmers and tenant farmers are eligible"
+      ],
+      "exclusions": [
+        "Higher Economic Status farmers",
+        "Institutional land holders",
+        "Farmer families with any family member as serving/retired government employee"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Land ownership documents",
+        "Bank account details",
+        "Mobile number for authentication"
+      ],
+      "applicationProcess": [
+        "Visit PM-KISAN portal or CSC center",
+        "Fill the application form with required details",
+        "Upload necessary documents",
+        "Submit application for verification",
+        "Receive payment via Direct Benefit Transfer"
+      ],
+      "helpline": "155261",
+      "website": "https://pmkisan.gov.in",
+      "status": "active",
+      "coverage": "All states and UTs",
+      "budgetAllocation": "₹65,000 crores (2023-24)"
+    },
+    {
+      "id": "pmay-gramin",
+      "name": "Pradhan Mantri Awas Yojana - Gramin (PMAY-G)",
+      "category": "housing",
+      "ministry": "Ministry of Rural Development",
+      "launchDate": "2016-11-20",
+      "objective": "To provide pucca houses with basic amenities to all houseless and those living in dilapidated/kutcha houses in rural areas by 2022.",
+      "benefits": [
+        {
+          "amount": "120000",
+          "description": "₹1.20 lakh assistance for construction of houses in plain areas"
+        },
+        {
+          "amount": "130000",
+          "description": "₹1.30 lakh assistance for construction of houses in hilly/difficult areas"
+        },
+        {
+          "description": "90 days of unskilled manual labor under MGNREGA"
+        }
+      ],
+      "eligibility": [
+        "Households identified through SECC-2011",
+        "Houseless households and those living in zero, one or two room kutcha houses",
+        "Households with no adult member between 16-59 years",
+        "Female-headed households with no adult male member",
+        "Households with disabled members and no able-bodied adult member"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Job Card number",
+        "Bank account details",
+        "BPL Card",
+        "Income Certificate"
+      ],
+      "applicationProcess": [
+        "Registration through awaassoft.nic.in",
+        "Verification by Gram Panchayat",
+        "Technical sanction and administrative approval",
+        "Fund release in installments",
+        "Geo-tagging and quality monitoring"
+      ],
+      "helpline": "1800-11-6446",
+      "website": "https://rhreporting.nic.in",
+      "status": "active",
+      "coverage": "All rural areas",
+      "budgetAllocation": "₹48,000 crores (2023-24)"
+    },
+    {
+      "id": "pmuy",
+      "name": "Pradhan Mantri Ujjwala Yojana (PMUY)",
+      "category": "energy",
+      "ministry": "Ministry of Petroleum and Natural Gas",
+      "launchDate": "2016-05-01",
+      "objective": "To provide LPG connections to women from Below Poverty Line households to reduce their dependence on traditional cooking fuels and protect their health.",
+      "benefits": [
+        {
+          "description": "Free LPG connection with gas stove, pressure regulator, safety hose, and instruction booklet"
+        },
+        {
+          "amount": "1600",
+          "description": "Deposit-free LPG connection (worth ₹1,600)"
+        }
+      ],
+      "eligibility": [
+        "Adult women from BPL households",
+        "Women whose names are in SECC-2011 database",
+        "SC/ST women",
+        "PMAY beneficiaries",
+        "AY, PHH, AAY, and other priority households"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "BPL Card",
+        "Bank account details",
+        "Address proof",
+        "Photograph of the applicant"
+      ],
+      "applicationProcess": [
+        "Visit nearest LPG distributor",
+        "Fill KYC form with required documents",
+        "Submit application for verification",
+        "Get connection within 7-10 days",
+        "First refill subsidized under the scheme"
+      ],
+      "helpline": "1906",
+      "website": "https://pmuy.gov.in",
+      "status": "active",
+      "coverage": "Pan-India",
+      "budgetAllocation": "₹12,800 crores total allocation"
+    },
+    {
+      "id": "sc-scholarship",
+      "name": "Post Matric Scholarship for SC Students",
+      "category": "education",
+      "ministry": "Ministry of Social Justice and Empowerment",
+      "launchDate": "1944-01-01",
+      "objective": "To provide financial assistance to SC students for pursuing post-matriculation studies to enable them to pursue higher education.",
+      "benefits": [
+        {
+          "amount": "230",
+          "period": "month",
+          "description": "₹230 per month maintenance allowance for day scholars"
+        },
+        {
+          "amount": "380",
+          "period": "month",
+          "description": "₹380 per month maintenance allowance for hostellers"
+        },
+        {
+          "description": "Reimbursement of tuition fees and other compulsory fees"
+        }
+      ],
+      "eligibility": [
+        "Students belonging to Scheduled Castes",
+        "Students studying in post-matriculation/post-secondary courses",
+        "Annual family income not exceeding ₹2.5 lakh",
+        "Students studying in recognized institutions"
+      ],
+      "documents": [
+        "Caste Certificate",
+        "Income Certificate",
+        "Aadhaar Card",
+        "Bank account details",
+        "Previous year mark sheets",
+        "Fee receipt from institution"
+      ],
+      "applicationProcess": [
+        "Apply online through National Scholarship Portal",
+        "Fill application with required details",
+        "Upload necessary documents",
+        "Submit to institution for verification",
+        "Receive scholarship via DBT"
+      ],
+      "helpline": "0120-6619540",
+      "website": "https://scholarships.gov.in",
+      "status": "active",
+      "coverage": "All states and UTs",
+      "budgetAllocation": "₹3,000 crores annually"
+    },
+    {
+      "id": "obc-scholarship",
+      "name": "Post Matric Scholarship for OBC Students",
+      "category": "education",
+      "ministry": "Ministry of Social Justice and Empowerment",
+      "launchDate": "2007-04-01",
+      "objective": "To provide financial assistance to OBC students for pursuing post-matriculation studies and encourage higher education among OBC communities.",
+      "benefits": [
+        {
+          "amount": "230",
+          "period": "month",
+          "description": "₹230 per month maintenance allowance for day scholars"
+        },
+        {
+          "amount": "380",
+          "period": "month",
+          "description": "₹380 per month maintenance allowance for hostellers"
+        },
+        {
+          "description": "Reimbursement of tuition fees up to specified limits"
+        }
+      ],
+      "eligibility": [
+        "Students belonging to Other Backward Classes (OBC)",
+        "Students studying in post-matriculation courses",
+        "Annual family income not exceeding ₹1 lakh",
+        "Students in recognized educational institutions"
+      ],
+      "documents": [
+        "OBC Certificate (non-creamy layer)",
+        "Income Certificate",
+        "Aadhaar Card",
+        "Bank account details",
+        "Academic certificates",
+        "Institution fee structure"
+      ],
+      "applicationProcess": [
+        "Register on National Scholarship Portal",
+        "Complete online application form",
+        "Upload all required documents",
+        "Institution verification process",
+        "Scholarship disbursement through DBT"
+      ],
+      "helpline": "0120-6619540",
+      "website": "https://scholarships.gov.in",
+      "status": "active",
+      "coverage": "Central sector scheme",
+      "budgetAllocation": "₹1,200 crores annually"
+    },
+    {
+      "id": "mudra-yojana",
+      "name": "Pradhan Mantri MUDRA Yojana",
+      "category": "business",
+      "ministry": "Ministry of Finance",
+      "launchDate": "2015-04-08",
+      "objective": "To provide funding to micro-enterprises and small business units to promote entrepreneurship and self-employment.",
+      "benefits": [
+        {
+          "amount": "50000",
+          "description": "Shishu loans up to ₹50,000"
+        },
+        {
+          "amount": "500000",
+          "description": "Kishore loans ₹50,000 to ₹5 lakh"
+        },
+        {
+          "amount": "1000000",
+          "description": "Tarun loans ₹5 lakh to ₹10 lakh"
+        }
+      ],
+      "eligibility": [
+        "Individual entrepreneurs",
+        "Small manufacturing units",
+        "Service sector businesses",
+        "Shopkeepers and vendors",
+        "Artisans and food processors",
+        "Repair shops and machine operators"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "PAN Card",
+        "Business plan or project report",
+        "Address proof",
+        "Bank statements",
+        "Photographs"
+      ],
+      "applicationProcess": [
+        "Approach nearest bank or NBFC",
+        "Submit application with business plan",
+        "Document verification process",
+        "Credit appraisal by lending institution",
+        "Loan approval and disbursement"
+      ],
+      "helpline": "180011042300",
+      "website": "https://mudra.org.in",
+      "status": "active",
+      "coverage": "Pan-India",
+      "budgetAllocation": "₹3.21 lakh crore disbursed since inception"
+    },
+    {
+      "id": "ayushman-bharat",
+      "name": "Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana (AB-PMJAY)",
+      "category": "health",
+      "ministry": "Ministry of Health and Family Welfare",
+      "launchDate": "2018-09-23",
+      "objective": "To provide health insurance coverage to poor and vulnerable families for secondary and tertiary hospitalization.",
+      "benefits": [
+        {
+          "amount": "500000",
+          "period": "year",
+          "description": "₹5 lakh health insurance cover per family per year"
+        },
+        {
+          "description": "Cashless treatment at empaneled hospitals"
+        },
+        {
+          "description": "Coverage for pre and post hospitalization expenses"
+        }
+      ],
+      "eligibility": [
+        "Families identified through SECC-2011",
+        "Rural families with specific occupation and deprivation criteria",
+        "Urban families based on 11 pre-defined occupational criteria",
+        "Families listed in RSBY database"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Ration Card",
+        "SECC identification",
+        "Mobile number for verification"
+      ],
+      "applicationProcess": [
+        "Check eligibility through website or helpline",
+        "Visit nearest CSC or hospital",
+        "Generate Golden Card",
+        "Use card for cashless treatment",
+        "No premium payment required"
+      ],
+      "helpline": "14555",
+      "website": "https://pmjay.gov.in",
+      "status": "active",
+      "coverage": "All states except Delhi and Odisha",
+      "budgetAllocation": "₹7,200 crores (2023-24)"
+    },
+    {
+      "id": "old-age-pension",
+      "name": "National Old Age Pension Scheme (NOAPS)",
+      "category": "pension",
+      "ministry": "Ministry of Rural Development",
+      "launchDate": "1995-08-15",
+      "objective": "To provide financial assistance to destitute senior citizens to improve their quality of life and ensure basic livelihood security.",
+      "benefits": [
+        {
+          "amount": "500",
+          "period": "month",
+          "description": "₹500 per month pension (states may provide additional amount)"
+        }
+      ],
+      "eligibility": [
+        "Citizens aged 60 years and above",
+        "Belonging to households below poverty line",
+        "Having little or no regular source of income",
+        "Not receiving pension under any other government scheme"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Age proof certificate",
+        "BPL Card",
+        "Bank account details",
+        "Income certificate",
+        "Recent photograph"
+      ],
+      "applicationProcess": [
+        "Apply through Gram Panchayat/Ward Office",
+        "Submit application with required documents",
+        "Verification by local authorities",
+        "Approval by district collector",
+        "Pension credited monthly to bank account"
+      ],
+      "helpline": "1800-180-1551",
+      "website": "https://nsap.nic.in",
+      "status": "active",
+      "coverage": "All states and UTs",
+      "budgetAllocation": "₹9,652 crores (2023-24)"
+    },
+    {
+      "id": "disability-pension",
+      "name": "National Disability Pension Scheme (NDPS)",
+      "category": "pension",
+      "ministry": "Ministry of Rural Development",
+      "launchDate": "2009-02-01",
+      "objective": "To provide pension to persons with disabilities belonging to BPL households to ensure their basic livelihood security.",
+      "benefits": [
+        {
+          "amount": "500",
+          "period": "month",
+          "description": "₹500 per month pension (states may provide additional amount)"
+        }
+      ],
+      "eligibility": [
+        "Persons with disabilities aged 18 years and above",
+        "Having 40% or more disability",
+        "Belonging to households below poverty line",
+        "Not receiving pension under any other scheme"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Disability certificate (40% or more)",
+        "Age proof",
+        "BPL Card",
+        "Bank account details",
+        "Income certificate"
+      ],
+      "applicationProcess": [
+        "Apply at Block/District office",
+        "Medical examination for disability assessment",
+        "Document verification by authorities",
+        "Approval by competent authority",
+        "Monthly pension through DBT"
+      ],
+      "helpline": "1800-180-1551",
+      "website": "https://nsap.nic.in",
+      "status": "active",
+      "coverage": "All states and UTs",
+      "budgetAllocation": "₹1,500 crores annually"
+    },
+    {
+      "id": "pmkvy",
+      "name": "Pradhan Mantri Kaushal Vikas Yojana (PMKVY)",
+      "category": "skill",
+      "ministry": "Ministry of Skill Development and Entrepreneurship",
+      "launchDate": "2015-07-15",
+      "objective": "To enable youth to take up industry-relevant skill training that will help them secure a sustainable livelihood.",
+      "benefits": [
+        {
+          "amount": "8000",
+          "description": "Average monetary reward of ₹8,000 on successful completion of training"
+        },
+        {
+          "description": "Free skill development training"
+        },
+        {
+          "description": "Government certification on successful completion"
+        },
+        {
+          "description": "Placement assistance"
+        }
+      ],
+      "eligibility": [
+        "Indian citizens aged 18-45 years",
+        "Should have basic literacy skills",
+        "Unemployed or school/college dropouts",
+        "Preference to youth from economically weaker sections"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Educational certificates",
+        "Bank account details",
+        "Address proof",
+        "Passport size photographs"
+      ],
+      "applicationProcess": [
+        "Visit PMKVY website or center",
+        "Choose training center and course",
+        "Register with required documents",
+        "Complete training program",
+        "Appear for assessment and get certified"
+      ],
+      "helpline": "08800055555",
+      "website": "https://pmkvyofficial.org",
+      "status": "active",
+      "coverage": "Pan-India",
+      "budgetAllocation": "₹948.9 crores (PMKVY 4.0)"
+    },
+    {
+      "id": "pmjdy",
+      "name": "Pradhan Mantri Jan Dhan Yojana",
+      "category": "finance",
+      "ministry": "Ministry of Finance",
+      "launchDate": "2014-08-28",
+      "objective": "To ensure financial inclusion by providing access to banking services, remittance and insurance to the unbanked.",
+      "benefits": [
+        {
+          "description": "Zero balance bank account with RuPay debit card"
+        },
+        {
+          "amount": "200000",
+          "description": "₹2 lakh accident insurance cover"
+        },
+        {
+          "amount": "30000",
+          "description": "₹30,000 life insurance cover (with certain conditions)"
+        },
+        {
+          "description": "Overdraft facility up to ₹10,000"
+        }
+      ],
+      "eligibility": [
+        "Indian citizens aged 18 years and above",
+        "No minimum balance required",
+        "Priority to women, SC/ST, and minorities"
+      ],
+      "documents": [
+        "Aadhaar Card",
+        "Voter ID",
+        "Driving License",
+        "PAN Card",
+        "Passport size photographs"
+      ],
+      "applicationProcess": [
+        "Visit nearest bank branch",
+        "Fill account opening form",
+        "Submit KYC documents",
+        "Initial deposit not required",
+        "Receive RuPay debit card"
+      ],
+      "helpline": "1800-11-0001",
+      "website": "https://pmjdy.gov.in",
+      "status": "active",
+      "coverage": "Pan-India",
+      "budgetAllocation": "Over 48 crore accounts opened"
+    },
+    {
+      "id": "mgnrega",
+      "name": "Mahatma Gandhi National Rural Employment Guarantee Act",
+      "category": "employment",
+      "ministry": "Ministry of Rural Development",
+      "launchDate": "2005-02-02",
+      "objective": "To provide at least 100 days of guaranteed wage employment per year to every rural household whose adult members volunteer to do unskilled manual work.",
+      "benefits": [
+        {
+          "amount": "309",
+          "period": "day",
+          "description": "Minimum wage of ₹309 per day (varies by state)"
+        },
+        {
+          "description": "100 days guaranteed employment per household"
+        },
+        {
+          "description": "Work within 5 km radius or transport allowance"
+        }
+      ],
+      "eligibility": [
+        "Rural households",
+        "Adult members willing to do unskilled manual work",
+        "Registration with gram panchayat required"
+      ],
+      "documents": [
+        "Job Card application",
+        "Aadhaar Card",
+        "Bank account details",
+        "Photograph"
+      ],
+      "applicationProcess": [
+        "Apply for job card at gram panchayat",
+        "Submit required documents",
+        "Get job card within 15 days",
+        "Apply for work when needed",
+        "Work allocation within 15 days"
+      ],
+      "helpline": "1800-345-3663",
+      "website": "https://nrega.nic.in",
+      "status": "active",
+      "coverage": "All rural areas of India",
+      "budgetAllocation": "₹86,000 crores (2023-24)"
+    },
+    {
+      "id": "bbbp",
+      "name": "Beti Bachao Beti Padhao",
+      "category": "women",
+      "ministry": "Ministry of Women and Child Development",
+      "launchDate": "2015-01-22",
+      "objective": "To address the declining Child Sex Ratio and create an enabling environment for empowerment of girls and women.",
+      "benefits": [
+        {
+          "description": "Financial incentives for girl child education"
+        },
+        {
+          "description": "Awareness campaigns for gender equality"
+        },
+        {
+          "description": "Support for higher education of girls"
+        }
+      ],
+      "eligibility": [
+        "Girl children and their families",
+        "Focus on districts with poor Child Sex Ratio",
+        "All socio-economic backgrounds"
+      ],
+      "documents": [
+        "Birth certificate of girl child",
+        "Aadhaar Card",
+        "School enrollment certificate",
+        "Parents' income certificate"
+      ],
+      "applicationProcess": [
+        "Contact district administration",
+        "Register through Anganwadi centers",
+        "School enrollment verification",
+        "Participate in awareness programs",
+        "Access educational scholarships"
+      ],
+      "helpline": "011-23386423",
+      "website": "https://wcd.nic.in",
+      "status": "active",
+      "coverage": "Pan-India with focus on 640 districts",
+      "budgetAllocation": "₹280 crores (Phase II)"
+    },
+    {
+      "id": "sukanya-samriddhi",
+      "name": "Sukanya Samriddhi Yojana",
+      "category": "savings",
+      "ministry": "Ministry of Finance",
+      "launchDate": "2015-01-22",
+      "objective": "To encourage savings for girl child education and marriage expenses through attractive interest rates.",
+      "benefits": [
+        {
+          "amount": "7.6",
+          "description": "7.6% annual interest rate (tax-free)"
+        },
+        {
+          "description": "Tax deduction up to ₹1.5 lakh under Section 80C"
+        },
+        {
+          "description": "21-year maturity period with partial withdrawal allowed"
+        }
+      ],
+      "eligibility": [
+        "Girl child aged 0-10 years",
+        "Maximum 2 accounts per family",
+        "Indian residents only"
+      ],
+      "documents": [
+        "Girl child birth certificate",
+        "Parents' Aadhaar and PAN",
+        "Address proof",
+        "Initial deposit (minimum ₹250)"
+      ],
+      "applicationProcess": [
+        "Visit post office or authorized bank",
+        "Fill account opening form",
+        "Submit required documents",
+        "Make initial deposit",
+        "Regular deposits (₹250-₹1.5 lakh per year)"
+      ],
+      "helpline": "1800-266-6868",
+      "website": "https://www.nsiindia.gov.in",
+      "status": "active",
+      "coverage": "Pan-India",
+      "budgetAllocation": "Part of National Savings Scheme"
+    },
+    {
+      "id": "jjm",
+      "name": "Jal Jeevan Mission",
+      "category": "water",
+      "ministry": "Ministry of Jal Shakti",
+      "launchDate": "2019-08-15",
+      "objective": "To provide functional household tap connection to every rural household by 2024.",
+      "benefits": [
+        {
+          "description": "55 liters per person per day water supply"
+        },
+        {
+          "description": "Functional household tap connection"
+        },
+        {
+          "description": "Quality water testing facilities"
+        }
+      ],
+      "eligibility": [
+        "All rural households",
+        "Priority to water-stressed areas",
+        "Community participation required"
+      ],
+      "documents": [
+        "Household survey form",
+        "Aadhaar Card",
+        "Address proof",
+        "Community consent forms"
+      ],
+      "applicationProcess": [
+        "Village-level planning by gram panchayat",
+        "Household survey and registration",
+        "Technical design approval",
+        "Implementation through contractors",
+        "Quality testing and delivery"
+      ],
+      "helpline": "1800-11-5292",
+      "website": "https://jaljeevanmission.gov.in",
+      "status": "active",
+      "coverage": "All rural areas",
+      "budgetAllocation": "₹3.6 lakh crores till 2024"
+    }
+  ],
+  "categories": [
+    "agriculture",
+    "housing",
+    "energy",
+    "education",
+    "business",
+    "health",
+    "pension",
+    "skill",
+    "finance",
+    "employment",
+    "women",
+    "savings",
+    "water"
+  ],
+  "ministries": [
+    "Ministry of Agriculture and Farmers Welfare",
+    "Ministry of Rural Development",
+    "Ministry of Petroleum and Natural Gas",
+    "Ministry of Social Justice and Empowerment",
+    "Ministry of Finance",
+    "Ministry of Health and Family Welfare",
+    "Ministry of Skill Development and Entrepreneurship"
+  ]
+}

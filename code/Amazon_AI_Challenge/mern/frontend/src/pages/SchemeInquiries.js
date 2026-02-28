@@ -21,7 +21,7 @@ const SalesLeads = () => {
     });
     const [campaignInProgress, setCampaignInProgress] = useState(false);
     const [createLeadForm, setCreateLeadForm] = useState({
-        customer_name: '',
+        citizen_name: '',
         email: '',
         phone: '',
         source: 'Manual Entry',
@@ -119,8 +119,8 @@ const SalesLeads = () => {
     };
 
     const handleCreateLead = async () => {
-        if (!createLeadForm.customer_name || !createLeadForm.phone) {
-            alert('Please fill in at least customer name and phone number');
+        if (!createLeadForm.citizen_name || !createLeadForm.phone) {
+            alert('Please fill in at least citizen name and phone number');
             return;
         }
 
@@ -139,7 +139,7 @@ const SalesLeads = () => {
             if (response.ok) {
                 alert('✅ Lead created successfully!');
                 setCreateLeadForm({
-                    customer_name: '',
+                    citizen_name: '',
                     email: '',
                     phone: '',
                     source: 'Manual Entry',
@@ -160,14 +160,14 @@ const SalesLeads = () => {
 
     const handleMakeOutboundCall = async (lead) => {
         try {
-            console.log('📞 Making outbound call to:', lead.customer_name);
+            console.log('📞 Making outbound call to:', lead.citizen_name);
             
             const response = await fetch(`${process.env.REACT_APP_SIP_SERVER_URL || 'http://localhost:8003'}/initiate-sales-call`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     customer_phone: lead.phone,
-                    customer_name: lead.customer_name,
+                    citizen_name: lead.citizen_name,
                     product_interest: lead.product_interest,
                     campaign_type: lead.lead_type || 'general',
                     lead_id: lead._id
@@ -175,7 +175,7 @@ const SalesLeads = () => {
             });
             
             if (response.ok) {
-                alert(`✅ Call initiated to ${lead.customer_name}!`);
+                alert(`✅ Call initiated to ${lead.citizen_name}!`);
                 fetchSalesLeads();
                 setShowActionsMenu(null);
             } else {
@@ -223,7 +223,7 @@ const SalesLeads = () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             customer_phone: lead.phone,
-                            customer_name: lead.customer_name,
+                            citizen_name: lead.citizen_name,
                             product_interest: lead.product_interest,
                             campaign_type: 'burst_campaign',
                             lead_id: lead._id
@@ -232,14 +232,14 @@ const SalesLeads = () => {
                     
                     if (response.ok) {
                         successCount++;
-                        console.log(`✅ Call ${i+1}/${eligibleLeads.length} initiated to ${lead.customer_name}`);
+                        console.log(`✅ Call ${i+1}/${eligibleLeads.length} initiated to ${lead.citizen_name}`);
                     } else {
                         failCount++;
-                        console.log(`❌ Call ${i+1}/${eligibleLeads.length} failed for ${lead.customer_name}`);
+                        console.log(`❌ Call ${i+1}/${eligibleLeads.length} failed for ${lead.citizen_name}`);
                     }
                 } catch (err) {
                     failCount++;
-                    console.error(`Error calling ${lead.customer_name}:`, err);
+                    console.error(`Error calling ${lead.citizen_name}:`, err);
                 }
 
                 // Delay between calls (except for last one)
@@ -261,7 +261,7 @@ const SalesLeads = () => {
     // Filter leads based on search and filters
     const filteredLeads = salesLeads.filter(lead => {
         const matchesSearch = searchTerm === '' || 
-            lead.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            lead.citizen_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             lead.phone?.toLowerCase().includes(searchTerm.toLowerCase());
         
@@ -422,9 +422,9 @@ const SalesLeads = () => {
                                             <tr key={lead._id} className="group hover:bg-background-light dark:hover:bg-white/5 transition-colors">
                                                 <td className="py-4 px-6">
                                                     <div className="flex items-center gap-3">
-                                                         <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm">{lead.customer_name.split(' ').map(n=>n[0]).join('')}</div>
+                                                         <div className="size-10 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center font-bold text-sm">{lead.citizen_name.split(' ').map(n=>n[0]).join('')}</div>
                                                         <div>
-                                                            <p className="font-semibold text-text-light dark:text-text-dark">{lead.customer_name}</p>
+                                                            <p className="font-semibold text-text-light dark:text-text-dark">{lead.citizen_name}</p>
                                                             <p className="text-xs text-gray-500">{lead.email}</p>
                                                         </div>
                                                     </div>
@@ -518,7 +518,7 @@ const SalesLeads = () => {
                             <form onSubmit={(e) => { e.preventDefault(); handleCreateLead(); }} className="space-y-4">
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold uppercase text-gray-500 tracking-wider">Full Name *</label>
-                                    <div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-[18px]">person</span><input className="w-full pl-9 pr-4 py-2.5 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg text-sm focus:ring-primary focus:border-primary placeholder:text-gray-400" placeholder="e.g. John Smith" type="text" value={createLeadForm.customer_name} onChange={(e) => setCreateLeadForm({...createLeadForm, customer_name: e.target.value})} required/></div>
+                                    <div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-[18px]">person</span><input className="w-full pl-9 pr-4 py-2.5 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg text-sm focus:ring-primary focus:border-primary placeholder:text-gray-400" placeholder="e.g. John Smith" type="text" value={createLeadForm.citizen_name} onChange={(e) => setCreateLeadForm({...createLeadForm, citizen_name: e.target.value})} required/></div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4">
                                     <div className="space-y-1"><label className="text-xs font-bold uppercase text-gray-500 tracking-wider">Email Address</label><div className="relative"><span className="material-symbols-outlined absolute left-3 top-2.5 text-gray-400 text-[18px]">mail</span><input className="w-full pl-9 pr-4 py-2.5 bg-background-light dark:bg-background-dark border border-border-light dark:border-border-dark rounded-lg text-sm focus:ring-primary focus:border-primary placeholder:text-gray-400" placeholder="john@company.com" type="email" value={createLeadForm.email} onChange={(e) => setCreateLeadForm({...createLeadForm, email: e.target.value})}/></div></div>

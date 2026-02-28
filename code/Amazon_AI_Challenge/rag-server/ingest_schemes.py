@@ -1,0 +1,1186 @@
+"""
+Fetch and Ingest Government Scheme Documents from Internet
+Creates comprehensive vector database with real government scheme information
+"""
+import requests
+from bs4 import BeautifulSoup
+import json
+from pathlib import Path
+from typing import List, Dict, Any
+import logging
+from datetime import datetime
+import hashlib
+import time
+from db.chromadb_client import chromadb_client
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+# Government Scheme Sources
+SCHEME_SOURCES = {
+    "PM-KISAN": {
+        "url": "https://pmkisan.gov.in",
+        "name": "Pradhan Mantri Kisan Samman Nidhi",
+        "category": "Agriculture",
+        "description": "Income support for farmers - ₹6,000 per year in three installments"
+    },
+    "PMAY": {
+        "url": "https://pmayg.nic.in",
+        "name": "Pradhan Mantri Awas Yojana - Gramin",
+        "category": "Housing",
+        "description": "Housing for all in rural areas - ₹1.2-1.3 lakh assistance"
+    },
+    "PMUY": {
+        "url": "https://www.pmuy.gov.in",
+        "name": "Pradhan Mantri Ujjwala Yojana",
+        "category": "Energy",
+        "description": "Free LPG connections for BPL households"
+    },
+    "NSP": {
+        "url": "https://scholarships.gov.in",
+        "name": "National Scholarship Portal",
+        "category": "Education",
+        "description": "Scholarships for SC/ST/OBC students"
+    },
+    "PMJAY": {
+        "url": "https://pmjay.gov.in",
+        "name": "Ayushman Bharat - PMJAY",
+        "category": "Healthcare",
+        "description": "₹5 lakh health insurance per family per year"
+    },
+    "MUDRA": {
+        "url": "https://www.mudra.org.in",
+        "name": "Pradhan Mantri MUDRA Yojana",
+        "category": "Women Empowerment",
+        "description": "Loans up to ₹10 lakh for small businesses"
+    },
+    "IGNOAPS": {
+        "url": "https://nsap.nic.in",
+        "name": "Indira Gandhi National Old Age Pension",
+        "category": "Senior Citizens",
+        "description": "₹300-500/month pension for elderly BPL citizens"
+    },
+    "PMKVY": {
+        "url": "https://www.pmkvyofficial.org",
+        "name": "Pradhan Mantri Kaushal Vikas Yojana",
+        "category": "Skill Development",
+        "description": "Free skill training with certification"
+    }
+}
+
+
+# Comprehensive Government Scheme Knowledge Base
+SCHEME_KNOWLEDGE_BASE = [
+    {
+        "scheme_id": "PM-KISAN-001",
+        "scheme_name": "Pradhan Mantri Kisan Samman Nidhi (PM-KISAN)",
+        "category": "Agriculture",
+        "content": """
+PM-KISAN provides income support of ₹6,000 per year to all farmer families in India. 
+The amount is paid in three equal installments of ₹2,000 each every four months directly to bank accounts.
+
+Eligibility Criteria:
+- All farmer families (landholding farmers - single farmer, joint ownership, or ownership by members of joint family)
+- Small and marginal farmers with combined land holding up to 2 hectares
+- Must have Aadhaar card
+- Must have bank account with Aadhaar seeding
+
+Required Documents:
+- Aadhaar Card
+- Land Ownership Records
+- Bank Account Details with IFSC code
+- Mobile Number
+
+Application Process:
+1. Visit PM-KISAN portal (https://pmkisan.gov.in) or nearest Common Service Centre (CSC)
+2. Fill registration form with Aadhaar number
+3. Upload land ownership documents
+4. Submit bank account details
+5. Receive confirmation SMS
+6. First installment credited within 2-4 weeks
+
+Benefits:
+- ₹6,000 annual income support
+- Direct Benefit Transfer (DBT) to bank account
+- No application fee
+- Coverage across all states and UTs
+
+Helpline: 155261 / 011-24300606
+Email: pmkisan-ict@gov.in
+Website: https://pmkisan.gov.in
+
+Important Notes:
+- Deadline: Open throughout the year
+- Processing Time: 15-30 days
+- Verification by state government required
+- Can check application status online with Aadhaar number
+        """
+    },
+    {
+        "scheme_id": "PMAY-G-002",
+        "scheme_name": "Pradhan Mantri Awas Yojana - Gramin (PMAY-G)",
+        "category": "Housing",
+        "content": """
+PMAY-G aims to provide pucca houses to all houseless and households living in dilapidated houses in rural areas.
+
+Eligibility Criteria:
+- Must be BPL/AAY cardholder OR appear in SECC-2011 data
+- Household should not own a pucca house
+- No member should have received central assistance under housing schemes
+- Age: 18 years or above
+- Annual income below ₹1 lakh (for plain areas), ₹1.2 lakh (for hilly/difficult areas)
+
+Financial Assistance:
+- ₹1,20,000 for plain areas
+- ₹1,30,000 for hilly states, difficult areas, IAP districts
+- 90:10 cost sharing between Centre and States
+- 60:40 for North Eastern and Himalayan States
+
+Required Documents:
+- Aadhaar Card
+- Income Certificate
+- Bank Account Details
+- BPL/AAY Ration Card
+- Landholding Documents
+- Job Card (for MGNREGA workers)
+- Caste Certificate (if applicable)
+
+Application Process:
+1. Registration through Gram Panchayat
+2. Verification by Block Development Officer (BDO)
+3. Approval from District Rural Development Agency (DRDA)
+4. Installment-based payment:
+   - First installment: ₹50,000 (on foundation completion)
+   - Second installment: ₹50,000 (on lintel level)
+   - Third installment: ₹20,000/30,000 (on completion)
+
+Additional Benefits:
+- 90/95 days of unskilled labour through MGNREGA
+- Assistance for toilet construction (₹12,000 from Swachh Bharat Mission)
+- Electricity connection support
+- LPG connection under PMUY
+
+Helpline: 1800-11-6446
+Email: support-pmayg@gov.in
+Website: https://pmayg.nic.in
+
+Important Notes:
+- House must be in name of female member or jointly
+- Minimum house area: 25 sq meters with basic amenities
+- Geo-tagged photos mandatory at each stage
+- Can track status online with registration number
+        """
+    },
+    {
+        "scheme_id": "PMUY-003",
+        "scheme_name": "Pradhan Mantri Ujjwala Yojana (PMUY)",
+        "category": "Energy",
+        "content": """
+PMUY provides LPG connections to women from Below Poverty Line (BPL) households to ensure clean cooking fuel.
+
+Eligibility Criteria:
+- Woman should be at least 18 years old
+- Must be from BPL family (SECC-2011 list)
+- Should not have an LPG connection in the household
+- Must have Aadhaar card and bank account
+
+Priority Categories:
+1. SC/ST households
+2. Most Backward Classes (MBC)
+3. Antyodaya Anna Yojana (AAY)
+4. Forest dwellers
+5. People living in islands/river islands
+6. Tea garden & Ex-tea garden tribes
+7. Pradhan Mantri Awas Yojana (PMAY) beneficiaries
+
+Financial Benefits:
+- Free LPG connection (worth ₹1,600)
+- Deposit-free LPG connection
+- EMI facility for stove and first refill
+- First refill free (under PMUY 2.0)
+
+Required Documents:
+- BPL Ration Card OR SECC-2011 data
+- Aadhaar Card of the woman applicant
+- Bank Account Details (preferably with Aadhaar link)
+- Address Proof (Ration Card, Voter ID, or Electricity Bill)
+- Recent passport-size photograph
+- Declaration Form (provided by distributor)
+
+Application Process:
+1. Visit nearest LPG distributor with documents
+2. Fill PMUY application form (available at distributor office)
+3. Submit documents for verification
+4. KYC verification by distributor
+5. Connection installed at home within 7-15 days
+
+Additional Features:
+- Can avail loan for first refill and stove through distributor
+- EMI options available (auto-debit from bank account)
+- Can port connection to any location in India
+- Subsidy directly credited to bank account (DBT)
+
+Helpline: 1906 (toll-free)
+Email: contact-pmuy@gov.in
+Website: https://www.pmuy.gov.in
+
+Important Notes:
+- Deadline: Open throughout the year
+- No application fee
+- Connection in the name of woman only (mandatory)
+- Can register online at PMUY portal
+- PMUY 2.0 launched in 2021 - expanded to all poor households
+        """
+    },
+    {
+        "scheme_id": "NSP-SC-004",
+        "scheme_name": "National Scholarship Portal - SC/ST Pre-Matric Scholarship",
+        "category": "Education",
+        "content": """
+Provides financial assistance to SC/ST students studying in classes 9 and 10 to prevent dropouts.
+
+Eligibility Criteria:
+- Student must belong to SC/ST category
+- Studying in Class 9 or 10 in a recognized school
+- Parental annual income below ₹2.5 lakh
+- Minimum 50% marks in previous class (relaxed to 45% for differently-abled)
+- Age: Typically 13-18 years
+
+Scholarship Amount:
+Day Scholar:
+- Class 9-10: ₹225 per month (10 months = ₹2,250/year)
+
+Hosteller:
+- Class 9-10: ₹525 per month (10 months = ₹5,250/year)
+
+Additional Allowances:
+- Books and stationery: ₹750 per year
+- Admission fee: Actual (maximum ₹500)
+- Tuition fee: Actual or maximum limit by state
+
+Required Documents:
+- Caste Certificate (SC/ST)
+- Income Certificate (below ₹2.5 lakh)
+- Previous year marksheet
+- Aadhaar Card
+- Bank Account Details (preferably with Aadhaar seeding)
+- School Bonafide Certificate
+- Fee Receipt
+- Passport-size photograph
+
+Application Process:
+1. Register on National Scholarship Portal (https://scholarships.gov.in)
+2. Fill online application form with required details
+3. Upload all documents (max size: 200KB each, PDF format)
+4. Submit application
+5. School/Institute verification
+6. State nodal officer approval
+7. Amount disbursed via Direct Benefit Transfer (DBT)
+
+Important Dates:
+- Application Opens: August 1st (every year)
+- Application Deadline: October 31st
+- Institute Verification: Within 15 days of submission
+- Disbursement: December-January
+
+Renewal Process:
+- Scholarship is renewable every year
+- Must maintain minimum 50% marks
+- Fresh application required each academic year
+- Previous scholarship details pre-filled in renewal
+
+Helpline: 0120-6619540
+Email: helpdesk@nsp.gov.in
+Website: https://scholarships.gov.in
+
+Important Notes:
+- One student can avail only ONE scholarship from NSP
+- Scholarship applicable for government and aided schools
+- Mobile number verification mandatory (OTP-based)
+- Password must be kept confidential (used for login each year)
+        """
+    },
+    {
+        "scheme_id": "NSP-OBC-005",
+        "scheme_name": "Post-Matric Scholarship for OBC Students",
+        "category": "Education",
+        "content": """
+Financial assistance for OBC students pursuing higher education (Class 11 onwards) to reduce dropout rates.
+
+Eligibility Criteria:
+- Student must belong to OBC category (non-creamy layer)
+- Studying in Class 11 onwards (including graduation, post-graduation, professional courses)
+- Parental annual income below ₹1 lakh
+- Must have secured admission through merit/entrance exam
+- Age: 16-35 years (up to PhD)
+
+Scholarship Coverage:
+- Tuition Fee: Full fee reimbursement (actual or ceiling limit)
+- Maintenance Allowance:
+  * Hostellers: ₹570-1,200 per month (based on course level)
+  * Day Scholars: ₹230-550 per month (based on course level)
+- Study tour expenses: Actual (maximum ₹750)
+- Thesis typing/printing: ₹1,600 (for research scholars)
+- Book allowance: Varies by course (₹1,000-5,000/year)
+
+Course-wise Rates:
+- Classes 11-12: ₹230/month (day scholar), ₹380/month (hosteller)
+- Graduation: ₹300/month (day scholar), ₹550/month (hosteller)
+- Post-Graduation: ₹550/month (day scholar), ₹1,200/month (hosteller)
+- Professional Courses: Higher rates applicable
+
+Required Documents:
+- OBC Certificate (non-creamy layer, within 1 year validity)
+- Income Certificate (annual income below ₹1 lakh)
+- Previous year marksheet (60% for renewal, 50% for first time)
+- Aadhaar Card
+- Bank Account Details (with Aadhaar linking)
+- Admission letter/Fee receipt from institute
+- Institute ID card
+- Self-declaration (available on portal)
+
+Application Process:
+1. Register on NSP portal with Aadhaar OTP
+2. Fill application form (select Post-Matric OBC scheme)
+3. Upload documents (scanned copies, max 200KB)
+4. Submit application before deadline
+5. Institute verifies enrollment and fee details
+6. State government approves
+7. DBT to student's bank account
+
+Application Timeline:
+- Application Opens: September 1st
+- Application Deadline: November 15th
+- Institute Verification: November 30th
+- State Approval: December 31st
+- Disbursement: January onwards
+
+Renewal Guidelines:
+- Must maintain 60% marks in previous year
+- Fresh application required annually
+- Cannot skip a year (must apply consecutively)
+- Change of course requires fresh documents
+
+Helpline: 0120-6619540
+Email: obc-scholarship@gov.in
+Website: https://scholarships.gov.in
+
+Important Notes:
+- Scholarship not available for distance/correspondence courses (unless pursued after regular course)
+- Study in India only (not for foreign universities)
+- Can be claimed along with institute scholarship (if total doesn't exceed actual fee)
+- Aadhaar-enabled biometric authentication may be required
+        """
+    },
+    {
+        "scheme_id": "MUDRA-006",
+        "scheme_name": "Pradhan Mantri MUDRA Yojana (PMMY)",
+        "category": "Women Empowerment",
+        "content": """
+PMMY provides loans up to ₹10 lakh to non-corporate, non-farm small/micro enterprises for income-generating activities.
+
+Three Loan Categories:
+
+1. SHISHU:
+   - Loans up to ₹50,000
+   - For startups and early-stage businesses
+   - Lowest interest rates (7-12% depending on bank)
+
+2. KISHORE:
+   - Loans from ₹50,001 to ₹5 lakh
+   - For established businesses needing expansion
+   - Interest rates: 9-14%
+
+3. TARUN:
+   - Loans from ₹5 lakh to ₹10 lakh
+   - For mature businesses
+   - Interest rates: 10-16%
+
+Eligible Activities:
+- Manufacturing, trading, service sectors
+- Small retail shops
+- Food processing units
+- Textile manufacturing
+- Beauty parlors, salons
+- Transport vehicles (auto, taxi, rickshaw)
+- Street vendors, hawkers
+- Repair shops
+- Food service establishments
+- Small-scale industries
+
+NOT Eligible:
+- Agricultural activities (crop production)
+- Corporate entities
+- Speculative activities
+- Activities generating income illegally
+
+Eligibility Criteria:
+- Age: 18-65 years
+- Indian citizen
+- Should have a viable business plan
+- No existing loan default
+- Business should be non-farm
+- First-time borrowers encouraged
+
+Required Documents:
+- Aadhaar Card
+- PAN Card (mandatory for loans above ₹1 lakh)
+- Address proof (Voter ID, Driving License, Passport)
+- Business plan/Project report
+- Past 6 months bank statements
+- Income proof (ITR/Form 16/Business statements)
+- Proof of business registration (if applicable)
+- Quotations for machinery/equipment (if purchasing)
+- Two passport-size photographs
+
+Loan Features:
+- NO collateral required
+- NO processing fee
+- Repayment period: 3-7 years (depending on loan amount)
+- Moratorium period: 6 months (for business stabilization)
+- Can prepay without penalty
+
+Application Process:
+1. Approach any bank, NBFC, or MFI offering MUDRA loans
+2. Fill loan application form
+3. Submit business plan with cost estimates
+4. Provide KYC and income documents
+5. Bank assessment of business viability
+6. Credit appraisal and approval
+7. Loan disbursement (usually within 15-30 days)
+
+Special Features for Women:
+- Lower interest rates (0.25-0.5% less)
+- Priority processing
+- Dedicated help desk at banks
+- Special training programs
+- MUDRA Card provided for flexible withdrawals
+
+Top Banks Providing MUDRA Loans:
+- All Public Sector Banks (SBI, PNB, BOB, etc.)
+- Private Banks (ICICI, HDFC, Axis)
+- Regional Rural Banks (RRBs)
+- Small Finance Banks
+- NBFCs registered with RBI
+
+Helpline: 1800-180-11-11 (toll-free)
+Email: mudra.helpdesk@sidbi.in
+Website: https://www.mudra.org.in
+
+Success Rate:
+- Over 40 crore loans disbursed since 2015
+- Average loan size: ₹75,000
+- 68% loans to women entrepreneurs
+- Default rate: Less than 3%
+
+Important Tips:
+- Start with smaller loan (Shishu) to build credit history
+- Maintain good repayment record for future higher loans
+- Use MUDRA Card for flexible working capital needs
+- Attend MUDRA-sponsored training programs for business skills
+        """
+    },
+    {
+        "scheme_id": "PMJAY-007",
+        "scheme_name": "Ayushman Bharat - Pradhan Mantri Jan Arogya Yojana (AB-PMJAY)",
+        "category": "Healthcare",
+        "content": """
+World's largest health insurance scheme providing health cover of ₹5 lakh per family per year for secondary and tertiary care hospitalization.
+
+Coverage Details:
+- Health cover: ₹5 lakh per family per year
+- Covers: 1,943 medical procedures
+- Includes: Secondary and tertiary care hospitalization
+- Family size: No restriction on family size or age
+
+Eligible Population:
+- Bottom 40% poorest families as per SECC-2011 data
+- Automatic eligibility (no application required if in SECC list)
+- Rural families under 7 deprivation categories
+- Urban families under 11 occupational categories
+
+Medical Coverage Includes:
+- Medical examination, treatment, and consultation
+- Pre-hospitalization expenses (up to 3 days)
+- Post-hospitalization expenses (up to 15 days)
+- Medicines and medical consumables
+- Non-intensive and intensive care services
+- Diagnostic and laboratory investigations
+- Medical implantation services
+- Accommodation benefits
+- Food services
+- Complications arising during treatment
+
+Excluded Services:
+- OPD treatment (outpatient)
+- Drug rehabilitation
+- Cosmetic procedures
+- Organ transplant (except limited cases)
+- Individual diagnostic tests not related to hospitalization
+
+Required Documents:
+- Aadhaar Card (mandatory)
+- Ration Card (BPL/AAY/PHH)
+- SECC-2011 data verification
+- Mobile number (for SMS alerts)
+
+How to Enroll:
+1. Check eligibility at https://pmjay.gov.in/am-i-eligible
+2. Enter mobile number and OTP verification
+3. If eligible, visit nearest Common Service Centre (CSC)
+4. Carry Aadhaar card and ration card
+5. Biometric authentication done
+6. Ayushman Card printed instantly (₹30 fee to CSC)
+
+Using the Card:
+1. Check empaneled hospitals at https://hospitals.pmjay.gov.in
+2. Visit any empaneled hospital (15,000+ across India)
+3. Show Ayushman Card or Aadhaar at admission desk
+4. Treatment is 100% cashless - no payment required
+5. Hospital bills directly to PMJAY
+
+Card Features:
+- No premium to pay
+- No restriction on age
+- Covers pre-existing diseases from day one
+- Portable across India (any state)
+- Paperless admission process
+- QR code for quick verification
+
+Treatment Packages:
+- Cardiology: Coronary bypass, valve replacement, angioplasty
+- Neurosurgery: Brain tumor surgery, spinal surgery
+- Oncology: Chemotherapy, radiation therapy
+- Orthopedics: Knee replacement, hip replacement
+- Gynecology: C-section, hysterectomy
+- Pediatrics: NICU care, surgeries
+- General Surgery: Appendectomy, hernia repair, gallstone removal
+- Urology: Kidney stone removal, prostate surgery
+
+Top Treatments Covered:
+1. Coronary Artery Bypass Graft (CABG) - up to ₹1.5 lakh
+2. Knee Replacement - up to ₹1.2 lakh
+3. Prostate Surgery - up to ₹80,000
+4. Skull Base Surgery - up to ₹3 lakh
+5. Double Valve Replacement - up to ₹2.5 lakh
+
+State Health Agency Contact:
+- Each state has dedicated SHA for grievances
+- Toll-free number varies by state
+- National helpline: 14555 (24x7)
+
+Helpline: 14555 (toll-free, 24x7)
+Email: pmjay@nha.gov.in
+Website: https://pmjay.gov.in
+
+Beneficiary Rights:
+- Right to choose empaneled hospital
+- Right to information about package rates
+- Right to timely treatment
+- Right to file grievance if denied
+
+Important Notes:
+- No waiting period - coverage from day one
+- Family definition: Includes parents, spouse, children, and dependents
+- Cannot be clubbed with other government health schemes
+- Enrollment: Open all year
+- Card validity: Lifetime (no annual renewal)
+        """
+    },
+    {
+        "scheme_id": "IGNOAPS-008",
+        "scheme_name": "Indira Gandhi National Old Age Pension Scheme (IGNOAPS)",
+        "category": "Senior Citizens",
+        "content": """
+IGNOAPS provides monthly pension to senior citizens living below the poverty line to ensure income security in old age.
+
+Eligibility Criteria:
+- Age: 60 years or above
+- Must be living below poverty line (BPL)
+- Annual household income below ₹1 lakh (varies by state)
+- Should not be receiving pension from any other source (government or employer)
+- Should not be receiving family pension
+- Caste: All categories eligible (General, OBC, SC, ST)
+
+Pension Amount:
+Central Component:
+- Age 60-79 years: ₹200 per month
+- Age 80+ years: ₹500 per month
+
+State Component (varies by state):
+- Most states add ₹100-₹1,000 additional
+- Total pension typically: ₹300-₹1,500 per month
+
+State-wise Examples (Total = Central + State):
+- Karnataka: ₹600/month (60-79), ₹900/month (80+)
+- Telangana: ₹2,016/month (under Aasara pension)
+- Andhra Pradesh: ₹2,250/month (under YSR Pension Kanuka)
+- Delhi: ₹2,500/month
+- Tamil Nadu: ₹1,000/month
+
+Required Documents:
+- Age Proof:
+  * Birth Certificate (best)
+  * School Leaving Certificate
+  * Aadhaar Card (with age mentioned)
+  * Voter ID Card
+  * Driving License
+  * Passport
+- Income Certificate (issued by Tehsildar/Revenue Officer)
+- BPL Certificate (ration card or SECC-2011 data)
+- Bank Account Details (with Aadhaar seeding)
+- Aadhaar Card (mandatory)
+- Recent passport-size photograph
+- Self-declaration form (no other pension received)
+
+Application Process:
+1. Obtain application form from:
+   - Gram Panchayat (rural areas)
+   - Municipal Office (urban areas)
+   - Tehsil Office
+   - Sub-Divisional Office
+2. Fill form with complete details
+3. Attach all required documents (self-attested copies)
+4. Submit to local authorities:
+   - Village Panchayat Secretary (rural)
+   - Ward Officer (urban)
+5. Verification by local authorities (7-15 days)
+6. Forwarded to District Social Welfare Officer
+7. Approval by District Collector
+8. Pension disbursement starts within 30-45 days
+
+Payment Mode:
+- Direct Benefit Transfer (DBT) to bank account
+- Monthly automatic credit on 1st-7th of every month
+- Some states use India Post Payment Bank (IPPB)
+- Can withdraw from any bank branch or ATM
+
+Additional Benefits (varies by state):
+- Free bus pass for local travel
+- Discounts on train tickets
+- Free health checkups
+- Priority in government hospitals
+- Subsidized food grains
+- Subsidized housing
+
+Renewal Process:
+- Annual renewal required (usually in June-July)
+- Life certificate (Jeevan Pramaan) mandatory after age 80
+- Can be submitted online at https://jeevanpramaan.gov.in
+- Biometric authentication at CSC or bank
+- Failure to renew = pension suspended
+
+Pension Discontinuation:
+- Death of beneficiary
+- Migration to another state (must re-apply in new state)
+- Annual income exceeds ₹1 lakh
+- Found receiving pension from other source
+- Failure to submit life certificate
+
+Helpline: State-specific (each state has different number)
+National Helpline: 1800-180-1551 (Ministry of Rural Development)
+Website: https://nsap.nic.in
+
+Important Tips:
+- Keep Aadhaar and bank account active (transaction at least once every 6 months)
+- Submit life certificate on time (within 30 days of deadline)
+- Update mobile number in bank account for SMS alerts
+- Collect pension regularly (unclaimed pension may be forfeited after 3 months)
+- Report death of spouse if claiming survivor pension
+
+Common Issues and Solutions:
+1. Pension delayed:
+   - Check bank account is active
+   - Verify Aadhaar-bank linking
+   - Contact Block Development Officer
+2. Pension stopped:
+   - Likely due to missing life certificate
+   - Visit Tehsil Office with Aadhaar
+   - Submit fresh life certificate
+3. Amount reduced:
+   - Check state notification (some states revise rates)
+   - Verify with Social Welfare Department
+        """
+    },
+    {
+        "scheme_id": "IGNDPS-009",
+        "scheme_name": "Indira Gandhi National Disability Pension Scheme (IGNDPS)",
+        "category": "Differently Abled",
+        "content": """
+IGNDPS provides monthly pension to persons with severe or multiple disabilities living below poverty line.
+
+Eligibility Criteria:
+- Age: 18 years or above
+- Disability: Minimum 80% disability (certified by medical board)
+- Must be living below poverty line (BPL)
+- Annual household income below ₹1 lakh
+- Not receiving pension/salary from any other source
+- Indian citizen, residing in India
+
+Types of Disabilities Covered:
+- Physical disability (locomotor, visual, hearing, speech)
+- Mental disability (intellectual, mental illness)
+- Multiple disabilities (combination of two or more)
+- Blindness (total or partial)
+- Low vision
+- Leprosy-cured
+- Hearing impairment
+- Locomotor disability
+- Dwarfism
+- Intellectual disability
+- Mental illness
+- Autism spectrum disorder
+- Cerebral palsy
+- Muscular dystrophy
+- Acid attack victims
+- Parkinson's disease (advanced stages)
+
+Pension Amount:
+Central Component:
+- Age 18-79 years: ₹300 per month
+- Age 80+ years: ₹500 per month
+
+State Component (additional):
+- Varies from ₹200 to ₹1,500 per month
+- Total typically: ₹500-₹2,000 per month
+
+State-wise Examples:
+- Andhra Pradesh: ₹3,000/month
+- Telangana: ₹3,016/month
+- Karnataka: ₹1,500/month
+- Tamil Nadu: ₹1,500/month
+- Delhi: ₹2,500/month
+- Maharashtra: ₹600/month
+
+Required Documents:
+- Disability Certificate:
+  * Issued by Medical Board (District Hospital or Government Medical College)
+  * Must mention disability percentage (minimum 80%)
+  * Valid for lifetime (unless specified as temporary)
+- Age Proof (Birth Certificate, Aadhaar, School Certificate)
+- Income Certificate (from Tehsildar)
+- BPL Certificate (ration card or SECC-2011 data)
+- Aadhaar Card (mandatory)
+- Bank Account Details (with Aadhaar seeding)
+- Recent passport-size photograph
+- Self-declaration (no other pension received)
+
+How to Get Disability Certificate:
+1. Visit District Hospital or Medical College
+2. Apply to Chief Medical Officer (CMO) with:
+   - Application form
+   - Medical reports/history
+   - Recent photographs
+3. Medical Board examination (3-5 doctors)
+4. Certificate issued within 7-15 days
+5. Mention exact disability percentage
+6. Get one original + 3 photocopies
+
+Application Process:
+1. Obtain application form from:
+   - Gram Panchayat (rural)
+   - Municipal Corporation (urban)
+   - District Social Welfare Office
+   - State Disability Commissioner Office
+2. Fill form completely
+3. Attach disability certificate + other documents
+4. Submit to:
+   - Village Panchayat (rural)
+   - Ward Officer (urban)
+   - Taluk/Tehsil Office
+5. Local verification (village/ward officer visits home)
+6. Forwarded to District Social Welfare Officer
+7. Scrutiny and approval by District Collector
+8. Pension starts within 30-60 days
+
+Payment Mode:
+- Direct Benefit Transfer (DBT) to bank account
+- Monthly credit on 1st week of every month
+- Can withdraw from ATM or bank branch
+- India Post Payment Bank for remote areas
+
+Additional Benefits:
+- Free travel pass (local buses, metro)
+- Railway concession (up to 75% on premium trains)
+- Priority in government schemes
+- Free artificial limbs, hearing aids, wheelchairs
+- Special education assistance
+- Vocational training programs
+- Reserved seats in educational institutions
+- 4% reservation in government jobs
+
+Renewal Requirements:
+- Annual life certificate (Jeevan Pramaan) at 80+ age
+- Medical re-assessment (only if disability temporary)
+- Update income status annually
+- Bank passbook photo (showing account active)
+
+Pension Discontinuation:
+- Death of beneficiary
+- Migration to another state
+- Income exceeds poverty line threshold
+- Disability reduced below 80%
+- Found employed (earning regular income)
+
+Special Provisions:
+- Guardians can apply on behalf of mentally disabled persons
+- Joint bank account allowed (with guardian)
+- Pension transferable across districts (within state)
+- Can claim arrears for up to 3 months delay
+
+Grievance Redressal:
+- First level: Block Development Officer
+- Second level: District Social Welfare Officer
+- Third level: State Disability Commissioner
+- Portal: https://disabilityaffairs.gov.in
+
+Helpline: State-specific
+National Helpline: 1800-233-5956 (Ministry of Social Justice)
+Website: https://nsap.nic.in
+
+Common Challenges and Solutions:
+1. Difficulty getting 80% disability certificate:
+   - Get second opinion from different medical board
+   - Multiple disabilities add up to total percentage
+   - Appeal to State Disability Commissioner
+2. Pension delayed:
+   - Check Aadhaar-bank linkage
+   - Visit Tehsil Office with application copy
+   - File RTI if no response within 60 days
+3. Application rejected:
+   - Review rejection letter for reason
+   - Submit missing documents
+   - Re-apply with corrections
+
+Important Tips:
+- Get disability certificate first (takes 2-3 weeks)
+- Apply immediately after 18th birthday (eligible from day 1)
+- Keep original disability certificate safe (laminate it)
+- Open bank account in nationalized bank (better DBT support)
+- Register on UDID portal (https://www.swavlambancard.gov.in) for additional benefits
+- Claim pension arrears if delayed (up to 3 months backdated)
+        """
+    },
+    {
+        "scheme_id": "PMKVY-010",
+        "scheme_name": "Pradhan Mantri Kaushal Vikas Yojana (PMKVY)",
+        "category": "Skill Development",
+        "content": """
+PMKVY is India's flagship skill training scheme providing free training and certification to youth for improving employability.
+
+Scheme Components:
+
+1. Short Term Training (STT):
+   - Duration: 150-300 hours (2-6 months)
+   - Over 40 sectors, 200+ job roles
+   - Free training with stipend
+   - Industry-recognized certification
+
+2. Recognition of Prior Learning (RPL):
+   - For workers with existing skills (informal sector)
+   - Assessment and certification of prior skills
+   - No training required if skills adequate
+   - Fast-track certification in 2-7 days
+
+3. Special Projects:
+   - Training for specific industry requirements
+   - Customized curriculum
+   - Placement assistance
+
+Eligibility Criteria:
+- Age: 15-45 years (relaxed for specially-abled)
+- Indian citizen
+- Minimum Class 8 pass (varies by course)
+- Unemployed or willing to upskill
+- Should be able to read, write, and understand local language
+
+Training Sectors (Popular):
+1. Hospitality: Hotel management, housekeeping, F&B service
+2. Automotive: Mechanic, driver, auto electrician
+3. Construction: Mason, painter, plumber, electrician
+4. Beauty & Wellness: Hair stylist, beautician, spa therapist
+5. Retail: Sales associate, cashier, store manager
+6. Healthcare: Nursing, phlebotomy, patient care
+7. IT/ITes: Data entry, computer operator, digital marketing
+8. Electronics: TV repair, mobile repair, appliance technician
+9. Agriculture: Organic farming, dairy, poultry
+10. Apparel: Tailor, embroidery, fashion design
+11. Banking: Banking correspondent, financial literacy
+12. Logistics: Warehouse manager, delivery person
+13. Tourism: Tour guide, travel agent
+14. Security: Private security, bouncer
+15. Gems & Jewelry: Jewellery designer, gem setter
+
+Required Documents:
+- Aadhaar Card (mandatory)
+- Educational certificates (highest qualification)
+- Bank Account Details (for stipend)
+- Passport-size photographs (3 copies)
+- Caste Certificate (if applicable for reserved categories)
+
+Enrollment Process:
+1. Visit PMKVY Portal: https://www.pmkvyofficial.org
+2. Click on "Find a Training Centre" OR "Candidate Registration"
+3. Search for nearby training centers by:
+   - Location (PIN code, city)
+   - Sector (select domain)
+   - Job role
+4. Select training center and course
+5. Fill online registration form
+6. Upload documents
+7. Submit online OR visit center for direct admission
+8. Receive SMS confirmation
+9. Attend orientation on given date
+
+Training Process:
+- Duration: Varies by job role (150-300 hours)
+- Attendance: Minimum 80% mandatory
+- Classes: Usually 6 hours/day, 6 days/week
+- Practical training: 70% hands-on, 30% theory
+- Soft skills: Communication, personality development, workplace ethics
+- Assessments: Regular tests + pre-assessment
+- Final Assessment: By third-party assessment agency
+
+Certification:
+- National Skill Qualification Framework (NSQF) aligned
+- NSDC (National Skill Development Corporation) certificate
+- Recognized by industry and government
+- QR code for verification
+- Digital certificate available on skill India portal
+- Portable across India
+
+Financial Benefits:
+Average Monetary Reward (after certification):
+- ₹2,000 to ₹10,000 (based on job role and NSQF level)
+- Direct transfer to bank account
+
+Stipend (during training):
+- Transportation allowance: ₹150-300/month
+- Residential facility: Some centers provide hostel
+- Free study material: Books, workbooks, tools
+- Free uniform: Where applicable
+
+Placement Assistance:
+- Minimum 70% placement target
+- Job fairs organized quarterly
+- Industry partnerships for direct hiring
+- Apprenticeship linkage
+- Entrepreneurship support (MUDRA loan guidance)
+- Resume building and interview preparation
+
+RPL Certification Process:
+1. Register at PMKVY center
+2. Declare existing skills and experience
+3. Assessment scheduled (within 7 days)
+4. Practical + theory test
+5. Certificate issued (if passed)
+6. Monetary reward: ₹500-1,500
+
+Special Features for Women:
+- Separate training batches
+- Flexible timings (morning/evening)
+- On-site childcare at some centers
+- Female trainers for sensitive domains
+- Safety and security measures
+
+Training Centers:
+- Over 32,000 PMKVY training centers across India
+- Government ITIs, polytechnics
+- Private sector partners
+- NGO-run centers
+- Industry-specific centers (Maruti, L&T, ITC, etc.)
+
+Top Job Roles in Demand:
+1. Retail Sales Associate - ₹8,000-15,000/month
+2. Beautician - ₹10,000-25,000/month
+3. Mason - ₹15,000-30,000/month
+4. Electrician - ₹12,000-25,000/month
+5. Data Entry Operator - ₹8,000-15,000/month
+6. Nursing Assistant - ₹10,000-18,000/month
+7. Delivery Associate - ₹12,000-20,000/month
+8. Customer Care Executive - ₹8,000-18,000/month
+
+Mobile App:
+- PMKVY App (Android/iOS)
+- Find training centers
+- Enroll for courses
+- Track training progress
+- Access digital certificates
+- Check monetary reward status
+- Placement opportunities
+
+Helpline: 08800055555 (toll-free)
+Email: pmkvy@nsdcindia.org
+Website: https://www.pmkvyofficial.org
+
+Success Stories:
+- Over 1.2 crore youth trained since 2015
+- 3.5+ lakh training centers activated
+- 70% placement rate
+- Average salary: ₹10,000-15,000/month
+
+Important Notes:
+- Training is 100% FREE (beware of centers charging fee)
+- Enrollment open year-round
+- Can enroll in multiple courses (after completing first)
+- Certificate valid lifetime
+- International recognition (for certain courses)
+- Differently-abled friendly (special provisions)
+
+Common Queries:
+Q1: Is there any exam fee?
+A1: No. Everything is free including training, assessment, certification.
+
+Q2: Will I get a job after training?
+A2: Centers provide placement assistance. Ultimate job depends on performance and market demand.
+
+Q3: Can I do PMKVY training online?
+A3: Some courses available online (e.g., digital marketing). Most require hands-on training.
+
+Q4: What if I fail the assessment?
+A4: Can re-appear once after additional practice (within 3 months).
+
+Q5: Can I switch job roles?
+A5: Yes, after completing first course, can enroll for different role.
+        """
+    }
+]
+
+
+class SchemeDocumentIngester:
+    """Ingest government scheme documents into vector database"""
+    
+    def __init__(self):
+        self.chunk_size = 2000
+        self.chunk_overlap = 400
+    
+    def chunk_content(self, content: str, metadata: Dict) -> List[Dict]:
+        """Split content into chunks with metadata"""
+        chunks = []
+        words = content.split()
+        
+        for i in range(0, len(words), self.chunk_size - self.chunk_overlap):
+            chunk_words = words[i:i + self.chunk_size]
+            chunk_text = ' '.join(chunk_words)
+            
+            if len(chunk_text.strip()) > 100:
+                chunk_id = hashlib.md5(
+                    f"{metadata['scheme_id']}_{i}".encode()
+                ).hexdigest()[:12]
+                
+                chunks.append({
+                    'id': chunk_id,
+                    'text': chunk_text.strip(),
+                    'metadata': metadata
+                })
+        
+        return chunks
+    
+    def ingest_schemes(self):
+        """Ingest all scheme documents into ChromaDB"""
+        logger.info("=" * 70)
+        logger.info("🚀 STARTING GOVERNMENT SCHEME DOCUMENT INGESTION")
+        logger.info("=" * 70)
+        
+        try:
+            # Clear existing data first
+            logger.info("🗑️  Clearing existing vector database...")
+            store_dir = Path(__file__).parent / ".vectorstore"
+            if store_dir.exists():
+                import shutil
+                shutil.rmtree(store_dir)
+                store_dir.mkdir(exist_ok=True)
+            
+            # Connect to ChromaDB
+            chromadb_client.connect()
+            
+            total_chunks = 0
+            all_documents = []
+            all_metadatas = []
+            all_ids = []
+            
+            # Process each scheme
+            for scheme_data in SCHEME_KNOWLEDGE_BASE:
+                scheme_id = scheme_data['scheme_id']
+                scheme_name = scheme_data['scheme_name']
+                category = scheme_data['category']
+                content = scheme_data['content']
+                
+                logger.info(f"\n📄 Processing: {scheme_name}")
+                logger.info(f"   Category: {category}")
+                logger.info(f"   Content length: {len(content)} chars")
+                
+                # Create metadata
+                metadata = {
+                    'scheme_id': scheme_id,
+                    'scheme_name': scheme_name,
+                    'category': category,
+                    'source': 'government_portal',
+                    'ingestion_date': datetime.now().isoformat()
+                }
+                
+                # Chunk the content
+                chunks = self.chunk_content(content, metadata)
+                logger.info(f"   Generated {len(chunks)} chunks")
+                
+                # Add to batch
+                for chunk in chunks:
+                    all_ids.append(chunk['id'])
+                    all_documents.append(chunk['text'])
+                    all_metadatas.append(chunk['metadata'])
+                
+                total_chunks += len(chunks)
+            
+            # Batch add all documents to ChromaDB
+            logger.info(f"\n💾 Adding {total_chunks} chunks to vector database...")
+            chromadb_client.add_documents(
+                documents=all_documents,
+                metadatas=all_metadatas,
+                ids=all_ids
+            )
+            
+            # Verify insertion
+            stats = chromadb_client.get_collection_stats()
+            logger.info(f"\n✅ INGESTION COMPLETE!")
+            logger.info(f"   Total documents in DB: {stats.get('count', 0)}")
+            logger.info(f"   Total schemes: {len(SCHEME_KNOWLEDGE_BASE)}")
+            logger.info("=" * 70)
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Ingestion failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return False
+
+
+def main():
+    """Main execution"""
+    logger.info("🇮🇳 Scheme Saarthi RAG - Document Ingestion Pipeline")
+    logger.info("Fetching and ingesting government scheme documents...")
+    
+    ingester = SchemeDocumentIngester()
+    success = ingester.ingest_schemes()
+    
+    if success:
+        logger.info("\n✅ All documents successfully ingested into vector database!")
+        logger.info("🎯 RAG server ready to answer scheme queries")
+        logger.info("\n💡 Next steps:")
+        logger.info("   1. Run: python mcp_rag_server.py")
+        logger.info("   2. RAG server will be available on http://localhost:8002")
+        logger.info("   3. Test with: python test_rag.py")
+    else:
+        logger.error("\n❌ Ingestion failed. Check logs above for details.")
+
+
+if __name__ == "__main__":
+    main()

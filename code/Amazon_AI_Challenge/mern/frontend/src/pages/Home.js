@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import AIAgentButton from '../components/AIAgentButton';
 import { useAuth } from '../context/AuthContext';
@@ -7,26 +7,39 @@ import { useNavigate } from 'react-router-dom';
 const Home = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [searchQuery, setSearchQuery] = useState('');
 
     const handleLogout = () => {
         logout();
         navigate('/login');
     };
 
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            navigate(`/my-schemes?search=${encodeURIComponent(searchQuery)}`);
+        }
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    };
+
     return (
         <div className="bg-background-light dark:bg-background-dark font-display text-text-light dark:text-text-dark min-h-screen flex flex-col overflow-x-hidden selection:bg-primary selection:text-black antialiased">
             <header className="w-full border-b border-[#e6e6db] dark:border-[#3a3928] bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur-xl sticky top-0 z-40 transition-all duration-300">
                 <div className="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
-                    <Link className="flex items-center gap-3 group" to="/">
+                    <Link className="flex items-center gap-3 group" to="/home">
                         <div className="flex items-center justify-center size-10 rounded-full bg-primary text-black transition-transform group-hover:scale-110">
                             <span className="material-symbols-outlined">account_balance</span>
                         </div>
                         <h2 className="text-xl font-bold tracking-tight">Scheme Saarthi</h2>
                     </Link>
                     <nav className="hidden md:flex items-center gap-1">
-                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/devices">My Applications</Link>
-                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/track-repair">Track Status</Link>
-                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/history">My Schemes</Link>
+                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/applications">My Applications</Link>
+                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/track-status">Track Status</Link>
+                        <Link className="px-4 py-2 rounded-full text-sm font-medium hover:bg-black/5 dark:hover:bg-white/5 transition-colors" to="/my-schemes">My Schemes</Link>
                     </nav>
                     <div className="flex items-center gap-4">
                         <button className="hidden md:flex items-center justify-center size-10 rounded-full border border-[#e6e6db] dark:border-[#3a3928] hover:bg-surface-light dark:hover:bg-surface-dark transition-colors">
@@ -64,11 +77,11 @@ const Home = () => {
                                 </p>
                             </div>
                             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight text-text-light dark:text-white drop-shadow-sm">
-                                सरकारी योजनाएं <br />
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-text-light to-gray-500 dark:from-white dark:to-gray-400">आपके लिए</span>
+                                Government Schemes <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-text-light to-gray-500 dark:from-white dark:to-gray-400">For Everyone</span>
                             </h1>
                             <h2 className="text-lg md:text-xl text-[#5c5b4f] dark:text-[#cbcb9c] font-normal leading-relaxed max-w-xl">
-                                Discover ₹50,000+ Crores in unclaimed benefits. Voice-first AI in Hindi, Telugu, Tamil. 1000+ schemes at your fingertips.
+                                Discover ₹50,000+ Crores in unclaimed benefits. Voice-first AI assistance in multiple languages. 1000+ schemes at your fingertips.
                             </h2>
                         </div>
                         <div className="relative z-10 w-full max-w-[640px] mt-2 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
@@ -76,10 +89,20 @@ const Home = () => {
                                 <div className="pl-6 md:pl-8 pr-4 text-[#8c8b5f] flex items-center justify-center">
                                     <span className="material-symbols-outlined text-2xl">search</span>
                                 </div>
-                                <input className="w-full h-full bg-transparent border-none text-text-light dark:text-text-dark placeholder:text-[#8c8b5f]/70 focus:ring-0 text-base md:text-lg font-medium" placeholder="किसान योजना, छात्रवृत्ति, पेंशन... (e.g., 'PM-KISAN')" type="text" />
+                                <input 
+                                    className="w-full h-full bg-transparent border-none text-text-light dark:text-text-dark placeholder:text-[#8c8b5f]/70 focus:ring-0 text-base md:text-lg font-medium" 
+                                    placeholder="Search schemes: farmers, education, health... (e.g., 'PM-KISAN')" 
+                                    type="text" 
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onKeyPress={handleKeyPress}
+                                />
                                 <div className="pr-2 md:pr-3">
-                                    <button className="h-12 md:h-14 px-6 md:px-8 rounded-full bg-primary hover:bg-primary-hover text-black font-bold text-sm md:text-base transition-colors flex items-center justify-center shadow-sm">
-                                        खोजें योजना
+                                    <button 
+                                        onClick={handleSearch}
+                                        className="h-12 md:h-14 px-6 md:px-8 rounded-full bg-primary hover:bg-primary-hover text-black font-bold text-sm md:text-base transition-colors flex items-center justify-center shadow-sm"
+                                    >
+                                        Search Schemes
                                     </button>
                                 </div>
                             </label>
@@ -88,42 +111,42 @@ const Home = () => {
                 </section>
                 <section className="w-full max-w-[1000px] px-6 pb-12">
                     <div className="flex flex-col items-center gap-8">
-                        <p className="text-xs font-bold text-[#8c8b5f] dark:text-[#8c8b5f] uppercase tracking-[0.2em]">योजना श्रेणी चुनें</p>
+                        <p className="text-xs font-bold text-[#8c8b5f] dark:text-[#8c8b5f] uppercase tracking-[0.2em]">Choose Scheme Category</p>
                         <div className="flex flex-wrap justify-center gap-4">
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes?category=agriculture" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">agriculture</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">कृषि</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">Agriculture</span>
                                 </div>
                             </Link>
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes?category=education" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">school</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">शिक्षा</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">Education</span>
                                 </div>
                             </Link>
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes?category=health" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">health_and_safety</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">स्वास्थ्य</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">Health</span>
                                 </div>
                             </Link>
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes?category=housing" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">home</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">आवास</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">Housing</span>
                                 </div>
                             </Link>
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes?category=pension" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">elderly</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">पेंशन</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">Pension</span>
                                 </div>
                             </Link>
-                            <Link to="/profile" className="group">
+                            <Link to="/my-schemes" className="group">
                                 <div className="flex flex-col items-center justify-center gap-3 w-32 h-32 rounded-2xl border-2 border-[#e6e6db] dark:border-[#3a3928] bg-surface-light dark:bg-surface-dark hover:border-primary hover:bg-primary/5 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-lg">
                                     <span className="material-symbols-outlined text-4xl text-[#5c5b4f] dark:text-[#cbcb9c] group-hover:text-primary transition-colors">more_horiz</span>
-                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">अन्य</span>
+                                    <span className="text-sm font-semibold text-text-light dark:text-text-dark">View All</span>
                                 </div>
                             </Link>
                         </div>
@@ -135,9 +158,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">psychology</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">पात्रता जांच</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Eligibility Check</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                AI से तुरंत जानें कि आप किन योजनाओं के लिए पात्र हैं। हिंदी में बोलें या लिखें।
+                                Instantly find out which schemes you're eligible for with AI assistance. Speak or type in English.
                             </p>
                         </div>
 
@@ -145,9 +168,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-green-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">videocam</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Voice परामर्श</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Voice Consultation</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                हिंदी, तेलुगु, तमिल में बात करें। विशेषज्ञ आपकी मदद करेंगे।
+                                Talk in multiple languages. Expert assistance available to help you understand schemes.
                             </p>
                         </div>
 
@@ -155,9 +178,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">shield</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">आवेदन ट्रैकिंग</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Application Tracking</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                अपने सभी योजना आवेदनों को एक जगह ट्रैक करें। स्थिति SMS से जानें।
+                                Track all your scheme applications in one place. Get status updates via SMS.
                             </p>
                         </div>
 
@@ -165,9 +188,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-yellow-500 to-yellow-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">calendar_today</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">दस्तावेज़ सहायता</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Document Assistance</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                Aadhaar, बैंक खाता, भूमि रिकॉर्ड - हम मदद करेंगे। Textract OCR से स्वचालित।
+                                Help with Aadhaar, bank accounts, land records - we'll assist you. Automated with Textract OCR.
                             </p>
                         </div>
 
@@ -175,9 +198,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-red-500 to-red-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">history</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">योजना इतिहास</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">Scheme History</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                पिछली बातचीत, आवेदन, लाभ - सब एक जगह। पूरा रिकॉर्ड देखें।
+                                Previous conversations, applications, benefits - all in one place. View complete records.
                             </p>
                         </div>
 
@@ -185,9 +208,9 @@ const Home = () => {
                             <div className="flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 text-white mb-6 group-hover:scale-110 transition-transform">
                                 <span className="material-symbols-outlined text-3xl">pace</span>
                             </div>
-                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">24/7 उपलब्ध</h3>
+                            <h3 className="text-xl font-bold text-text-light dark:text-text-dark mb-3">24/7 Available</h3>
                             <p className="text-sm text-[#5c5b4f] dark:text-[#cbcb9c] leading-relaxed">
-                                AI सहायक हमेशा उपलब्ध। जब चाहें मदद लें। कोई शुल्क नहीं।
+                                AI assistant always available. Get help whenever you need. No charges.
                             </p>
                         </div>
                     </div>

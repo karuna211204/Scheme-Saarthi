@@ -31,7 +31,7 @@ Bridge the gap between 500M+ rural Indians and ₹50,000+ Crores of unclaimed go
 
 2. **📄 Document Verification** (verify_document tool)
    - Accept uploaded Aadhaar cards, income certificates, caste certificates, age proof
-   - Extract data using Amazon Textract OCR
+   - Extract data using Google Vision API / Tesseract OCR
    - Verify eligibility automatically
    - Guide citizens on missing documents
 

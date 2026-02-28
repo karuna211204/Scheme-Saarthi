@@ -4,13 +4,13 @@ import { useAuth } from '../context/AuthContext';
 const AppointmentBookingModal = ({ isOpen, onClose, onSuccess }) => {
     const { token } = useAuth();
     const [formData, setFormData] = useState({
-        customer_name: '',
+        citizen_name: '',
         phone: '',
         email: '',
         appointment_date: '',
         appointment_time: '',
-        product_name: '',
-        issue_description: '',
+        scheme_name: '',
+        inquiry_description: '',
         notes: ''
     });
     const [checking, setChecking] = useState(false);
@@ -80,7 +80,7 @@ const AppointmentBookingModal = ({ isOpen, onClose, onSuccess }) => {
             // First create appointment
             const appointmentData = {
                 ...formData,
-                customer_id: `${formData.phone}_${Date.now()}`,
+                citizen_id: `${formData.phone}_${Date.now()}`,
                 status: 'scheduled',
                 assigned_agent_type: 'AI',
                 assigned_agent: 'AI Assistant'
@@ -98,13 +98,13 @@ const AppointmentBookingModal = ({ isOpen, onClose, onSuccess }) => {
                 onClose();
                 // Reset form
                 setFormData({
-                    customer_name: '',
+                    citizen_name: '',
                     phone: '',
                     email: '',
                     appointment_date: '',
                     appointment_time: '',
-                    product_name: '',
-                    issue_description: '',
+                    scheme_name: '',
+                    inquiry_description: '',
                     notes: ''
                 });
                 setAvailability(null);
@@ -135,13 +135,13 @@ const AppointmentBookingModal = ({ isOpen, onClose, onSuccess }) => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-semibold uppercase text-[#8c8b5f] mb-1.5">
-                                Customer Name *
+                                Citizen Name *
                             </label>
                             <input
                                 type="text"
-                                name="customer_name"
+                                name="citizen_name"
                                 required
-                                value={formData.customer_name}
+                                value={formData.citizen_name}
                                 onChange={handleChange}
                                 className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark border border-[#e6e6db] dark:border-[#3a3928] focus:ring-2 focus:ring-primary focus:border-primary"
                             />
@@ -242,29 +242,29 @@ const AppointmentBookingModal = ({ isOpen, onClose, onSuccess }) => {
 
                     <div>
                         <label className="block text-xs font-semibold uppercase text-[#8c8b5f] mb-1.5">
-                            Product/Device
+                            Scheme Name
                         </label>
                         <input
                             type="text"
-                            name="product_name"
-                            value={formData.product_name}
+                            name="scheme_name"
+                            value={formData.scheme_name}
                             onChange={handleChange}
                             className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark border border-[#e6e6db] dark:border-[#3a3928] focus:ring-2 focus:ring-primary focus:border-primary"
-                            placeholder="e.g., MacBook Pro, iPhone 13"
+                            placeholder="e.g., PM-KISAN, PMAY-G"
                         />
                     </div>
 
                     <div>
                         <label className="block text-xs font-semibold uppercase text-[#8c8b5f] mb-1.5">
-                            Issue Description
+                            Inquiry Description
                         </label>
                         <textarea
-                            name="issue_description"
-                            value={formData.issue_description}
+                            name="inquiry_description"
+                            value={formData.inquiry_description}
                             onChange={handleChange}
                             rows="3"
                             className="w-full px-3 py-2 rounded-lg bg-background-light dark:bg-background-dark border border-[#e6e6db] dark:border-[#3a3928] focus:ring-2 focus:ring-primary focus:border-primary"
-                            placeholder="Describe the issue..."
+                            placeholder="Describe your inquiry or situation..."
                         />
                     </div>
 

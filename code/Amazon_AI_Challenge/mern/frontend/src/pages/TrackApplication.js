@@ -78,7 +78,7 @@ const TrackRepair = () => {
                         <Link to="/home" className="text-text-light dark:text-text-dark hover:text-primary transition-colors">
                             <span className="material-symbols-outlined">arrow_back</span>
                         </Link>
-                        <h1 className="text-4xl font-bold text-text-light dark:text-text-dark">आवेदन स्थिति</h1>
+                        <h1 className="text-4xl font-bold text-text-light dark:text-text-dark">Application Status</h1>
                     </div>
                     <p className="text-text-light/70 dark:text-text-dark/70">Monitor the status of your scheme applications</p>
                 </div>

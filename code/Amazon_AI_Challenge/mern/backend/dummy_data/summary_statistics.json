@@ -1,0 +1,41 @@
+{
+  "total_citizens": 100,
+  "gender_distribution": {
+    "male": 49,
+    "female": 51
+  },
+  "income_categories": {
+    "BPL": 19,
+    "APL": 14,
+    "EWS": 23,
+    "Middle": 20,
+    "Upper": 24
+  },
+  "caste_categories": {
+    "SC": 28,
+    "ST": 25,
+    "OBC": 21,
+    "General": 26
+  },
+  "occupation_types": {
+    "farmer": 17,
+    "student": 18,
+    "employed": 12,
+    "self_employed": 21,
+    "daily_wage": 15,
+    "unemployed": 17
+  },
+  "age_groups": {
+    "below_18": 0,
+    "18_30": 30,
+    "31_45": 27,
+    "46_60": 30,
+    "above_60": 13
+  },
+  "states_covered": 15,
+  "verification_rate": {
+    "aadhaar": "66.0%",
+    "pan": "59.0%",
+    "income": "77.0%"
+  }
+}

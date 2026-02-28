@@ -22,72 +22,72 @@ const jsonToCSV = (data, fields) => {
 };
 
 // Export citizens
-const exportCustomers = async (req, res) => {
+const exportCitizens = async (req, res) => {
   try {
     const citizens = await Citizen.find().sort({ created_at: -1 }).lean();
     
-    const fields = ['name', 'email', 'phone', 'address', 'date_created', 'status'];
+    const fields = ['name', 'email', 'phone', 'age', 'occupation', 'annual_income', 'state', 'district', 'created_at', 'status'];
     const csv = jsonToCSV(citizens, fields);
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=customers_${Date.now()}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=citizens_${Date.now()}.csv`);
     return res.send(csv);
   } catch (err) {
-    console.error('Error exporting customers:', err);
+    console.error('Error exporting citizens:', err);
     return res.status(500).json({ error: err.message });
   }
 };
 
 // Export consultations
-const exportAppointments = async (req, res) => {
+const exportConsultations = async (req, res) => {
   try {
     const consultations = await Consultation.find().sort({ created_at: -1 }).lean();
     
-    const fields = ['customer_name', 'phone', 'email', 'appointment_date', 'appointment_time', 
-                   'product_name', 'issue_description', 'status', 'assigned_agent', 'created_at'];
+    const fields = ['citizen_name', 'phone', 'email', 'appointment_date', 'appointment_time', 
+                   'scheme_name', 'inquiry_description', 'status', 'assigned_agent', 'created_at'];
     const csv = jsonToCSV(consultations, fields);
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=appointments_${Date.now()}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=consultations_${Date.now()}.csv`);
     return res.send(csv);
   } catch (err) {
-    console.error('Error exporting appointments:', err);
+    console.error('Error exporting consultations:', err);
     return res.status(500).json({ error: err.message });
   }
 };
 
 // Export applications
-const exportWarranties = async (req, res) => {
+const exportApplications = async (req, res) => {
   try {
     const applications = await Application.find().sort({ created_at: -1 }).lean();
     
-    const fields = ['phone', 'product_name', 'product_category', 'serial_number', 'invoice_id',
-                   'purchase_date', 'warranty_expiry', 'amc_enrolled', 'amc_expiry'];
-    const csv = jsonToCSV(warranties, fields);
+    const fields = ['application_id', 'phone', 'citizen_name', 'scheme_name', 'scheme_category', 
+                   'status', 'benefit_amount', 'reference_number', 'submission_date', 'created_at'];
+    const csv = jsonToCSV(applications, fields);
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=warranties_${Date.now()}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=applications_${Date.now()}.csv`);
     return res.send(csv);
   } catch (err) {
-    console.error('Error exporting warranties:', err);
+    console.error('Error exporting applications:', err);
     return res.status(500).json({ error: err.message });
   }
 };
 
 // Export scheme inquiries
-const exportSalesLeads = async (req, res) => {
+const exportSchemeInquiries = async (req, res) => {
   try {
     const inquiries = await SchemeInquiry.find().sort({ created_at: -1 }).lean();
     
-    const fields = ['customer_name', 'email', 'phone', 'product_interest', 'source', 
-                   'status', 'lead_score', 'icp_match_score', 'qualification_status', 'created_at'];
+    const fields = ['citizen_name', 'email', 'phone', 'scheme_id', 'scheme_category', 
+                   'status', 'inquiry_type', 'notes', 'created_at'];
     const csv = jsonToCSV(inquiries, fields);
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=sales_leads_${Date.now()}.csv`);
+    res.setHeader('Content-Disposition', `attachment; filename=scheme_inquiries_${Date.now()}.csv`);
     return res.send(csv);
   } catch (err) {
-    console.error('Error exporting sales leads:', err);
+    console.error('Error exporting scheme inquiries:', err);
     return res.status(500).json({ error: err.message });
   }
 };
@@ -95,10 +95,9 @@ const exportSalesLeads = async (req, res) => {
 // Export transcripts
 const exportTranscripts = async (req, res) => {
   try {
-    const transcripts = await Transcript.find().sort({ timestamp: -1 }).lean();
+    const transcripts = await Transcript.find().sort({ created_at: -1 }).lean();
     
-    const fields = ['customer_name', 'phone', 'agent_type', 'agent_name', 'issue_summary',
-                   'status', 'sentiment_score', 'timestamp'];
+    const fields = ['citizen_name', 'phone', 'citizen_id', 'transcript', 'created_at'];
     const csv = jsonToCSV(transcripts, fields);
     
     res.setHeader('Content-Type', 'text/csv');
@@ -106,14 +105,14 @@ const exportTranscripts = async (req, res) => {
     return res.send(csv);
   } catch (err) {
     console.error('Error exporting transcripts:', err);
-    return res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message});
   }
 };
 
 module.exports = {
-  exportCustomers,
-  exportAppointments,
-  exportWarranties,
-  exportSalesLeads,
+  exportCitizens,
+  exportConsultations,
+  exportApplications,
+  exportSchemeInquiries,
   exportTranscripts,
 };

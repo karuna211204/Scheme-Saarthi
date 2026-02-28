@@ -109,7 +109,7 @@ const Dashboard = () => {
                                 <tbody className="divide-y divide-border-light dark:divide-border-dark text-sm">
                                     {recentActivities.sort((a,b) => new Date(b.date_created || b.timestamp) - new Date(a.date_created || a.timestamp)).map(activity => (
                                         <tr key={activity._id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                            <td className="px-6 py-4">{activity.customer_name}</td>
+                                            <td className="px-6 py-4">{activity.citizen_name || activity.customer_name}</td>
                                             <td className="px-6 py-4"><div className="flex items-center gap-2">{getTypeIcon(activity.type)}<span>{activity.type}</span></div></td>
                                             <td className="px-6 py-4">{activity.status}</td>
                                             <td className="px-6 py-4 text-right text-slate-500">{new Date(activity.date_created || activity.timestamp).toLocaleDateString()}</td>

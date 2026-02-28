@@ -1,34 +1,34 @@
-const Transcript=require('../models/Transcript');
+const Transcript = require('../models/Transcript');
 
-const saveTranscript=async (req, res) => {
+const saveTranscript = async (req, res) => {
   try {
     console.log('='.repeat(60));
     console.log('💾 SAVE TRANSCRIPT');
     console.log('Request Body:', req.body);
     console.log('='.repeat(60));
     
-    const { customer_id, transcript, phone, customer_name }=req.body;
+    const { citizen_id, transcript, phone, citizen_name } = req.body;
     
-    if (!customer_id || !transcript) {
+    if (!citizen_id || !transcript) {
       console.error('❌ Missing required fields');
-      return res.status(400).json({ error: 'customer_id and transcript are required' });
+      return res.status(400).json({ error: 'citizen_id and transcript are required' });
     }
     
-    console.log(`🆔 Citizen ID: ${customer_id}`);
+    console.log(`🆔 Citizen ID: ${citizen_id}`);
     console.log(`📝 Transcript length: ${transcript.length} chars`);
     console.log(`📝 Preview: ${transcript.substring(0, 200)}...`);
     
     // Create new transcript document instead of updating - to save ALL conversations
-    const newTranscript=new Transcript({
-      customer_id,
+    const newTranscript = new Transcript({
+      citizen_id,
       transcript,
       phone,
-      customer_name,
+      citizen_name,
       created_at: new Date(),
       updated_at: new Date()
     });
     
-    const savedTranscript=await newTranscript.save();
+    const savedTranscript = await newTranscript.save();
     
     console.log('✅ New transcript saved successfully!');
     console.log('📋 Transcript ID:', savedTranscript._id);
@@ -40,13 +40,13 @@ const saveTranscript=async (req, res) => {
   }
 };
 
-const getTranscripts=async (req, res) => {
+const getTranscripts = async (req, res) => {
   try {
     console.log('='.repeat(60));
     console.log('📝 GET ALL TRANSCRIPTS');
     console.log('='.repeat(60));
     
-    const transcripts=await Transcript.find().sort({ created_at: -1 }).limit(100);
+    const transcripts = await Transcript.find().sort({ created_at: -1 }).limit(100);
     console.log(`✅ Found ${transcripts.length} transcripts`);
     console.log('='.repeat(60));
     return res.json(transcripts);
@@ -57,16 +57,16 @@ const getTranscripts=async (req, res) => {
 };
 
 // NEW: Get all transcripts for admin with full details
-const getAllTranscriptsForAdmin=async (req, res) => {
+const getAllTranscriptsForAdmin = async (req, res) => {
   try {
     console.log('='.repeat(60));
     console.log('👑 ADMIN: GET ALL TRANSCRIPTS');
     console.log('='.repeat(60));
     
     // Get all transcripts sorted by most recent first
-    const transcripts=await Transcript.find()
+    const transcripts = await Transcript.find()
       .sort({ created_at: -1 })
-      .select('customer_id customer_name phone transcript created_at updated_at')
+      .select('citizen_id citizen_name phone transcript created_at updated_at')
       .lean();
     
     console.log(`✅ Found ${transcripts.length} transcripts for admin`);
@@ -74,9 +74,9 @@ const getAllTranscriptsForAdmin=async (req, res) => {
     // Format the response with better structure
     const formattedTranscripts = transcripts.map(trans => ({
       _id: trans._id,
-      customer_name: trans.customer_name || 'Unknown Citizen',
+      citizen_name: trans.citizen_name || 'Unknown Citizen',
       phone: trans.phone || 'N/A',
-      customer_id: trans.customer_id,
+      citizen_id: trans.citizen_id,
       transcript: trans.transcript,
       created_at: trans.created_at,
       time_ago: getTimeAgo(trans.created_at)
@@ -113,14 +113,14 @@ function getTimeAgo(date) {
   return Math.floor(seconds) + ' seconds ago';
 }
 
-const getTranscriptByCustomerId=async (req, res) => {
+const getTranscriptByCitizenId=async (req, res) => {
   try {
     console.log('='.repeat(60));
-    console.log('🔍 GET TRANSCRIPT BY CUSTOMER ID');
-    console.log('Customer ID:', req.params.customer_id);
+    console.log('🔍 GET TRANSCRIPT BY CITIZEN ID');
+    console.log('Citizen ID:', req.params.citizen_id);
     console.log('='.repeat(60));
     
-    const transcript=await Transcript.findOne({ customer_id: req.params.customer_id });
+    const transcript=await Transcript.findOne({ citizen_id: req.params.citizen_id });
     
     if (!transcript) {
       console.log('❌ Transcript not found');
@@ -140,10 +140,10 @@ const deleteTranscript=async (req, res) => {
   try {
     console.log('='.repeat(60));
     console.log('🗑️ DELETE TRANSCRIPT');
-    console.log('Customer ID:', req.params.customer_id);
+    console.log('Citizen ID:', req.params.citizen_id);
     console.log('='.repeat(60));
     
-    const transcript=await Transcript.findOneAndDelete({ customer_id: req.params.customer_id });
+    const transcript=await Transcript.findOneAndDelete({ citizen_id: req.params.citizen_id });
     
     if (!transcript) {
       console.log('❌ Transcript not found');
@@ -163,6 +163,6 @@ module.exports={
   saveTranscript,
   getTranscripts,
   getAllTranscriptsForAdmin,
-  getTranscriptByCustomerId,
+  getTranscriptByCitizenId,
   deleteTranscript
 };

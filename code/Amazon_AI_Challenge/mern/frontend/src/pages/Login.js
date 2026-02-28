@@ -53,8 +53,8 @@ const Login = () => {
             </div>
             <h2 className="text-[#181811] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Scheme Saarthi</h2>
           </div>
-          <div className="hidden sm:flex gap-2">
-            <a className="text-sm font-medium text-[#181811] dark:text-[#e8e8e3] opacity-70 hover:opacity-100 px-4 py-2" href="#">Help Center</a>
+          <div className="flex items-center gap-3">
+            <a className="hidden sm:block text-sm font-medium text-[#181811] dark:text-[#e8e8e3] opacity-70 hover:opacity-100 px-4 py-2" href="#">Help Center</a>
           </div>
         </header>
         <div className="layout-container flex h-full grow flex-col justify-center items-center py-10 px-4 sm:px-10">

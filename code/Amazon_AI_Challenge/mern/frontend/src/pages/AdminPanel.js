@@ -7,11 +7,11 @@ const AdminPanel=() => {
   const { user, logout, token }=useAuth();
   const navigate=useNavigate();
   const [activeTab, setActiveTab]=useState('citizens');
-  const [customers, setCustomers]=useState([]);
+  const [citizens, setCitizens]=useState([]);
   const [appointments, setAppointments]=useState([]);
-  const [warranties, setWarranties]=useState([]);
+  const [applications, setApplications]=useState([]);
   const [transcripts, setTranscripts]=useState([]);
-  const [salesLeads, setSalesLeads]=useState([]);
+  const [schemeInquiries, setSchemeInquiries]=useState([]);
   const [loading, setLoading]=useState(true);
   const [searchTerm, setSearchTerm]=useState('');
   const [statusFilter, setStatusFilter]=useState('all');
@@ -20,13 +20,13 @@ const AdminPanel=() => {
   const [showCreateLeadModal, setShowCreateLeadModal] = useState(false);
   const [campaignForm, setCampaignForm] = useState({
     campaign_type: 'festival_offer',
-    target_customers: [],
+    target_citizens: [],
     product_interest: '',
     festival_name: '',
     offer_details: ''
   });
   const [newLeadForm, setNewLeadForm] = useState({
-    customer_name: '',
+    citizen_name: '',
     phone: '',
     email: '',
     company: '',
@@ -52,11 +52,11 @@ const AdminPanel=() => {
       console.log('🔄 Fetching admin data from:', process.env.REACT_APP_BACKEND_URL);
       
       const [cust, appts, warr, trans, leads]=await Promise.all([
-        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/customers`).then(r => r.json()),
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/citizens`).then(r => r.json()),
         fetch(`${process.env.REACT_APP_BACKEND_URL}/api/appointments`).then(r => r.json()),
-        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/warranties`).then(r => r.json()),
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/applications`).then(r => r.json()),
         fetch(`${process.env.REACT_APP_BACKEND_URL}/api/transcripts/admin/all`).then(r => r.json()),
-        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/salesleads`).then(r => r.json())
+        fetch(`${process.env.REACT_APP_BACKEND_URL}/api/scheme-inquiries`).then(r => r.json())
       ]);
       
       console.log('📊 Admin Data Fetched:');
@@ -65,13 +65,13 @@ const AdminPanel=() => {
       console.log('  Applications:', Array.isArray(warr) ? warr.length : 'Not an array', warr);
       console.log('  Transcripts:', Array.isArray(trans) ? trans.length : 'Not an array');
       console.log('  Transcript details:', trans);
-      console.log('  Sales Leads:', Array.isArray(leads) ? leads.length : 'Not an array', leads);
+      console.log('  Scheme Inquiries:', Array.isArray(leads) ? leads.length : 'Not an array', leads);
       
-      setCustomers(Array.isArray(cust) ? cust : []);
+      setCitizens(Array.isArray(cust) ? cust : []);
       setAppointments(Array.isArray(appts) ? appts : []);
-      setWarranties(Array.isArray(warr) ? warr : []);
+      setApplications(Array.isArray(warr) ? warr : []);
       setTranscripts(Array.isArray(trans) ? trans : []);
-      setSalesLeads(Array.isArray(leads) ? leads : []);
+      setSchemeInquiries(Array.isArray(leads) ? leads : []);
     } catch (err) {
       console.error('❌ Error fetching admin data:', err);
     }
@@ -108,14 +108,14 @@ const AdminPanel=() => {
 
   const handleMakeOutboundCall = async (lead) => {
     try {
-      console.log('📞 Making outbound call to:', lead.customer_name);
+      console.log('📞 Making outbound call to:', lead.citizen_name);
       
       const response = await fetch(`${process.env.REACT_APP_SIP_SERVER_URL || 'http://localhost:8003'}/initiate-sales-call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          customer_phone: lead.phone,
-          customer_name: lead.customer_name,
+          citizen_phone: lead.phone,
+          citizen_name: lead.citizen_name,
           product_interest: lead.product_interest,
           campaign_type: lead.lead_type || 'general',
           lead_id: lead._id
@@ -123,7 +123,7 @@ const AdminPanel=() => {
       });
       
       if (response.ok) {
-        alert(`✅ Call initiated to ${lead.customer_name}!`);
+        alert(`✅ Call initiated to ${lead.citizen_name}!`);
         fetchAllData();
       } else {
         const error = await response.json();
@@ -135,30 +135,30 @@ const AdminPanel=() => {
     }
   };
 
-  const renderCustomers=() => {
-    const filtered=filterData(customers, ['name', 'email', 'phone']);
+  const renderCitizens=() => {
+    const filtered=filterData(citizens, ['name', 'email', 'phone']);
     
     if (filtered.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
-          <p>No customers found</p>
+          <p>No citizens found</p>
         </div>
       );
     }
     
     return (
       <div className="space-y-3">
-        {filtered.map((customer) => (
-          <div key={customer._id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+        {filtered.map((citizen) => (
+          <div key={citizen._id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
             <div className="flex items-center justify-between">
               <div className="flex-1">
-                <h4 className="font-semibold text-gray-900">{customer.name}</h4>
-                <p className="text-sm text-gray-600 mt-1">📞 {customer.phone}</p>
-                <p className="text-sm text-gray-600">📧 {customer.email}</p>
-                {customer.address && <p className="text-xs text-gray-500 mt-1">📍 {customer.address}</p>}
+                <h4 className="font-semibold text-gray-900">{citizen.name}</h4>
+                <p className="text-sm text-gray-600 mt-1">📞 {citizen.phone}</p>
+                <p className="text-sm text-gray-600">📧 {citizen.email}</p>
+                {citizen.address && <p className="text-xs text-gray-500 mt-1">📍 {citizen.address}</p>}
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-500">Joined: {new Date(customer.created_at).toLocaleDateString()}</p>
+                <p className="text-xs text-gray-500">Joined: {new Date(citizen.created_at).toLocaleDateString()}</p>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@ const AdminPanel=() => {
   };
 
   const renderAppointments=() => {
-    const filtered=filterData(appointments, ['customer_name', 'phone', 'product_name'], true);
+    const filtered=filterData(appointments, ['citizen_name', 'phone', 'scheme_name'], true);
     
     if (filtered.length === 0) {
       return (
@@ -188,14 +188,13 @@ const AdminPanel=() => {
                   <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusBadge(apt.status)}`}>
                     {apt.status?.toUpperCase()}
                   </span>
-                  <span className="font-medium text-gray-900">{apt.customer_name}</span>
+                  <span className="font-medium text-gray-900">{apt.citizen_name}</span>
                 </div>
-                <p className="text-sm text-gray-700 font-medium">{apt.product_name || 'Service'}</p>
-                <p className="text-sm text-gray-600 mt-1">{apt.issue_description}</p>
+                <p className="text-sm text-gray-700 font-medium">{apt.scheme_name || 'Consultation'}</p>
+                <p className="text-sm text-gray-600 mt-1">{apt.inquiry_description}</p>
                 <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
                   <span>📞 {apt.phone}</span>
                   <span>📅 {apt.appointment_date} at {apt.appointment_time}</span>
-                  <span>₹{apt.visit_charge || 300}</span>
                 </div>
                 {apt.address && <p className="text-xs text-gray-500 mt-1">📍 {apt.address}</p>}
               </div>
@@ -207,35 +206,37 @@ const AdminPanel=() => {
   };
 
   const renderWarranties=() => {
-    const filtered=filterData(warranties, ['product_name', 'phone', 'invoice_id']);
+    const filtered=filterData(applications, ['scheme_name', 'phone', 'application_id']);
     
     if (filtered.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
-          <p>No warranties found</p>
+          <p>No applications found</p>
         </div>
       );
     }
     
     return (
       <div className="space-y-3">
-        {filtered.map((warranty) => (
-          <div key={warranty._id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+        {filtered.map((application) => (
+          <div key={application._id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-gray-900">{warranty.product_name}</h4>
-                <p className="text-sm text-gray-600 mt-1">📞 {warranty.phone}</p>
-                <p className="text-sm text-gray-600">🧾 Invoice: {warranty.invoice_id}</p>
+                <h4 className="font-semibold text-gray-900">{application.scheme_name}</h4>
+                <p className="text-sm text-gray-600 mt-1">📞 {application.phone}</p>
+                <p className="text-sm text-gray-600">🧾 Application: {application.application_id}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  📅 {warranty.warranty_start_date} to {warranty.warranty_end_date}
+                  📅 {application.submission_date} - Status: {application.status}
                 </p>
               </div>
               <span className={`px-3 py-1 text-xs font-semibold rounded-full ${
-                new Date(warranty.warranty_end_date) < new Date()
+                application.status === 'approved'
+                  ? 'bg-green-100 text-green-800'
+                  : application.status === 'rejected' 
                   ? 'bg-red-100 text-red-800'
-                  : 'bg-green-100 text-green-800'
+                  : 'bg-yellow-100 text-yellow-800'
               }`}>
-                {new Date(warranty.warranty_end_date) < new Date() ? 'EXPIRED' : 'ACTIVE'}
+                {application.status?.toUpperCase() || 'PENDING'}
               </span>
             </div>
           </div>
@@ -245,7 +246,7 @@ const AdminPanel=() => {
   };
 
   const renderTranscripts=() => {
-    const filtered=filterData(transcripts, ['customer_name', 'phone', 'customer_id']);
+    const filtered=filterData(transcripts, ['citizen_name', 'phone', 'citizen_id']);
     
     console.log('📝 Admin Transcripts:');
     console.log('  Total:', transcripts.length);
@@ -269,11 +270,11 @@ const AdminPanel=() => {
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-green-700 font-semibold text-lg">
-                      {(trans.customer_name || 'U')[0].toUpperCase()}
+                      {(trans.citizen_name || 'U')[0].toUpperCase()}
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">{trans.customer_name || 'Unknown Customer'}</h4>
+                    <h4 className="font-semibold text-gray-900">{trans.citizen_name || 'Unknown Citizen'}</h4>
                     <p className="text-xs text-gray-500">📞 {trans.phone || 'No phone'}</p>
                   </div>
                 </div>
@@ -305,7 +306,7 @@ const AdminPanel=() => {
                 </button>
               )}
               
-              <p className="text-xs text-gray-400 mt-2">Session: {trans.customer_id}</p>
+              <p className="text-xs text-gray-400 mt-2">Session: {trans.citizen_id || trans.session_id}</p>
             </div>
           );
         })}
@@ -314,12 +315,12 @@ const AdminPanel=() => {
   };
 
   const renderSalesLeads=() => {
-    const filtered=filterData(salesLeads, ['customer_name', 'phone', 'lead_type']);
+    const filtered=filterData(schemeInquiries, ['citizen_name', 'phone', 'lead_type']);
     
     if (filtered.length === 0) {
       return (
         <div className="text-center py-8 text-gray-500">
-          <p>No sales leads found</p>
+          <p>No scheme inquiries found</p>
         </div>
       );
     }
@@ -370,7 +371,7 @@ const AdminPanel=() => {
               
               <div className="space-y-3">
                 <div>
-                  <h3 className="font-semibold text-gray-900 text-lg">{lead.customer_name}</h3>
+                  <h3 className="font-semibold text-gray-900 text-lg">{lead.citizen_name}</h3>
                   <div className="flex items-center gap-4 mt-1 flex-wrap">
                     <p className="text-sm text-gray-600">📞 {lead.phone}</p>
                     {lead.email && <p className="text-sm text-gray-600">📧 {lead.email}</p>}
@@ -573,11 +574,11 @@ const AdminPanel=() => {
   };
 
   const tabs=[
-    { id: 'customers', label: 'Customers', icon: FiUsers, count: customers.length },
+    { id: 'citizens', label: 'Citizens', icon: FiUsers, count: citizens.length },
     { id: 'appointments', label: 'Appointments', icon: FiCalendar, count: appointments.length },
-    { id: 'warranties', label: 'Warranties', icon: FiShield, count: warranties.length },
+    { id: 'applications', label: 'Applications', icon: FiShield, count: applications.length },
     { id: 'transcripts', label: 'Transcripts', icon: FiMessageSquare, count: transcripts.length },
-    { id: 'leads', label: 'Sales Leads', icon: FiTrendingUp, count: salesLeads.length }
+    { id: 'inquiries', label: 'Scheme Inquiries', icon: FiTrendingUp, count: schemeInquiries.length }
   ];
   return (
     <div className="min-h-screen bg-gray-50">
@@ -696,11 +697,11 @@ const AdminPanel=() => {
               </div>
             ) : (
               <>
-                {activeTab === 'customers' && renderCustomers()}
+                {activeTab === 'citizens' && renderCitizens()}
                 {activeTab === 'appointments' && renderAppointments()}
-                {activeTab === 'warranties' && renderWarranties()}
+                {activeTab === 'applications' && renderWarranties()}
                 {activeTab === 'transcripts' && renderTranscripts()}
-                {activeTab === 'leads' && renderSalesLeads()}
+                {activeTab === 'inquiries' && renderSalesLeads()}
               </>
             )}
           </div>
@@ -718,12 +719,12 @@ const AdminPanel=() => {
             
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Citizen Name *</label>
                 <input
                   type="text"
                   placeholder="e.g., Rajesh Kumar"
-                  value={newLeadForm.customer_name}
-                  onChange={(e) => setNewLeadForm({...newLeadForm, customer_name: e.target.value})}
+                  value={newLeadForm.citizen_name}
+                  onChange={(e) => setNewLeadForm({...newLeadForm, citizen_name: e.target.value})}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   required
                 />
@@ -746,7 +747,7 @@ const AdminPanel=() => {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
                   <input
                     type="email"
-                    placeholder="customer@example.com"
+                    placeholder="citizen@example.com"
                     value={newLeadForm.email}
                     onChange={(e) => setNewLeadForm({...newLeadForm, email: e.target.value})}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
@@ -773,7 +774,7 @@ const AdminPanel=() => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
                     <option value="inbound_inquiry">Inbound Inquiry</option>
-                    <option value="warranty_expiring">Warranty Expiring</option>
+                    <option value="application_deadline">Application Deadline Reminder</option>
                     <option value="amc_renewal">AMC Renewal</option>
                     <option value="new_purchase">New Purchase</option>
                     <option value="festival_offer">Festival Offer</option>
@@ -845,7 +846,7 @@ const AdminPanel=() => {
                 onClick={() => {
                   setShowCreateLeadModal(false);
                   setNewLeadForm({
-                    customer_name: '',
+                    citizen_name: '',
                     phone: '',
                     email: '',
                     company: '',
@@ -863,8 +864,8 @@ const AdminPanel=() => {
               </button>
               <button
                 onClick={async () => {
-                  if (!newLeadForm.customer_name || !newLeadForm.phone) {
-                    alert('Please fill in Customer Name and Phone Number');
+                  if (!newLeadForm.citizen_name || !newLeadForm.phone) {
+                    alert('Please fill in Citizen Name and Phone Number');
                     return;
                   }
 
@@ -880,7 +881,7 @@ const AdminPanel=() => {
                       alert(`✅ Lead created successfully!\n\nLead Score: ${result.lead?.lead_score || 0}\nQualification: ${result.lead?.qualification_status || 'N/A'}`);
                       setShowCreateLeadModal(false);
                       setNewLeadForm({
-                        customer_name: '',
+                        citizen_name: '',
                         phone: '',
                         email: '',
                         company: '',
@@ -928,7 +929,7 @@ const AdminPanel=() => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="festival_offer">Festival Offer</option>
-                  <option value="warranty_expiry">Warranty Expiry Reminder</option>
+                  <option value="scheme_deadline">Scheme Deadline Reminder</option>
                   <option value="amc_renewal">AMC Renewal</option>
                   <option value="new_product_launch">New Product Launch</option>
                   <option value="general">General Outreach</option>
@@ -976,7 +977,7 @@ const AdminPanel=() => {
                   <li>• High-priority leads (score ≥ 70)</li>
                   <li>• Qualified leads (score ≥ 50)</li>
                   <li>• Status: Open or Contacted</li>
-                  <li>• Total potential calls: {salesLeads.filter(l => 
+                  <li>• Total potential calls: {schemeInquiries.filter(l => 
                     ['high_priority', 'qualified'].includes(l.qualification_status) && 
                     ['open', 'contacted'].includes(l.status)
                   ).length}</li>
@@ -989,11 +990,11 @@ const AdminPanel=() => {
                 onClick={() => {
                   setShowCampaignModal(false);
                   setCampaignForm({
-                    campaign_type: 'festival_offer',
-                    target_customers: [],
-                    product_interest: '',
-                    festival_name: '',
-                    offer_details: ''
+                    campaign_type: 'scheme_awareness',
+                    target_citizens: [],
+                    scheme_interest: '',
+                    scheme_name: '',
+                    message_details: ''
                   });
                 }}
                 className="px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition"
@@ -1002,12 +1003,12 @@ const AdminPanel=() => {
               </button>
               <button
                 onClick={async () => {
-                  if (!campaignForm.product_interest || !campaignForm.offer_details) {
-                    alert('Please fill in Product Interest and Offer Details');
+                  if (!campaignForm.scheme_interest || !campaignForm.message_details) {
+                    alert('Please fill in Scheme Interest and Message Details');
                     return;
                   }
                   
-                  const targetLeads = salesLeads.filter(l => 
+                  const targetLeads = schemeInquiries.filter(l => 
                     ['high_priority', 'qualified'].includes(l.qualification_status) && 
                     ['open', 'contacted'].includes(l.status)
                   );
@@ -1024,17 +1025,17 @@ const AdminPanel=() => {
                   let successCount = 0;
                   for (const lead of targetLeads.slice(0, 5)) {
                     try {
-                      const response = await fetch(`${process.env.REACT_APP_SIP_SERVER_URL || 'http://localhost:8003'}/initiate-sales-call`, {
+                      const response = await fetch(`${process.env.REACT_APP_SIP_SERVER_URL || 'http://localhost:8003'}/initiate-awareness-call`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                          customer_phone: lead.phone,
-                          customer_name: lead.customer_name,
-                          product_interest: campaignForm.product_interest,
+                          citizen_phone: lead.phone,
+                          citizen_name: lead.citizen_name,
+                          scheme_category: campaignForm.scheme_interest,
                           campaign_type: campaignForm.campaign_type,
-                          festival_name: campaignForm.festival_name,
-                          offer_details: campaignForm.offer_details,
-                          lead_id: lead._id
+                          scheme_name: campaignForm.scheme_name,
+                          message_details: campaignForm.message_details,
+                          inquiry_id: lead._id
                         })
                       });
                       
