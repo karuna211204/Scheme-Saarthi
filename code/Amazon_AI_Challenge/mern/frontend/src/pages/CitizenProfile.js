@@ -172,6 +172,9 @@ const CitizenProfile = () => {
     };
 
     const handleOCRData = (extractedData) => {
+        console.log('📋 OCR Data Received:', extractedData);
+        
+        // Update profile data with extracted information
         setProfileData(prev => ({
             ...prev,
             ...extractedData
@@ -182,12 +185,18 @@ const CitizenProfile = () => {
             setVerificationStatus(prev => ({ ...prev, aadhaar: true }));
         }
         
+        // Close OCR modal and enable editing
         setShowOCR(false);
         setIsEditing(true);
+        
+        // Show success notification
+        alert('✅ Aadhaar details extracted and filled successfully! Please verify and save your profile.');
     };
 
-    const handleOCRError = (error) => {
-        alert(error);
+    const handleOCRError = (message) => {
+        // Only show actual errors, not success messages
+        console.error('⚠️ OCR Error:', message);
+        alert(`❌ ${message}`);
     };
 
     const saveProfile = async () => {

@@ -17,6 +17,7 @@ const citizenRoutes = require('./routes/CitizenRoutes');
 const schemeRoutes = require('./routes/SchemeRoutes');
 const schemeInquiryRoutes = require('./routes/SchemeInquiryRoutes');
 const userProfileRoutes = require('./routes/UserProfileRoutes');
+const ocrRoutes = require('./routes/OCRRoutes');
 
 const app = express();
 
@@ -49,6 +50,9 @@ app.use('/api/scheme-inquiries', schemeInquiryRoutes);
 
 // Enhanced User Profile Endpoints
 app.use('/api/profile', userProfileRoutes);
+
+// OCR Service Endpoints
+app.use('/api/ocr', ocrRoutes);
 
 app.get('/health', (req, res) => {
   res.json({

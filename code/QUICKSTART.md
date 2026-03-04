@@ -73,15 +73,49 @@ You should see successful responses for all 9 tests!
 
 ---
 
-## 🎤 Start AI Voice Agent
+## 🎤 Start AI Voice Agent (RAG-FIRST Architecture)
 
-### Step 1: Install AI Agent Dependencies
+### ⚠️ CRITICAL: RAG Server Must Be Running FIRST
+
+The AI agent uses a **RAG-FIRST approach** where the RAG server (government schemes knowledge base with 1000+ schemes) is the PRIMARY source of information. The agent MUST query RAG before answering any scheme-related questions.
+
+### Architecture:
+```
+Citizen Question → AI Agent → RAG Server (1000+ schemes) → Answer
+                              ↓
+                        Main MCP Server (Applications, etc.)
+```
+
+### Step 1: Start RAG Server (REQUIRED)
+```bash
+cd code/Amazon_AI_Challenge/rag-server
+pip install -r requirements.txt
+
+# Configure RAG Server
+# Create .env file with:
+GOOGLE_API_KEY=your_gemini_api_key
+RAG_EMBEDDING_MODEL=text-embedding-004
+RAG_EMBED_BACKEND=google
+RAG_SERVER_PORT=8002
+
+# Start RAG server (MUST run on port 8002)
+python mcp_rag_server.py
+```
+
+Expected output:
+```
+🚀 Starting Scheme Saarthi RAG MCP Server...
+📚 Scheme knowledge base ready: 1000+ documents
+🌐 Starting SSE server on 0.0.0.0:8002
+```
+
+### Step 2: Install AI Agent Dependencies
 ```bash
 cd code/Amazon_AI_Challenge/ai-agent
 pip install -r requirements.txt
 ```
 
-### Step 2: Configure AI Agent
+### Step 3: Configure AI Agent
 Create `.env` file in `ai-agent/`:
 ```env
 # Backend API
@@ -94,6 +128,10 @@ GOOGLE_API_KEY=your_gemini_api_key
 LIVEKIT_URL=wss://your-livekit-url
 LIVEKIT_API_KEY=your_api_key
 LIVEKIT_API_SECRET=your_api_secret
+
+# MCP Servers - RAG Server is CRITICAL for RAG-FIRST approach
+MCP_SERVER_URL=http://localhost:8001/sse
+RAG_SERVER_URL=http://localhost:8002/sse  # ⚠️ MUST BE RUNNING
 
 # Twilio
 TWILIO_ACCOUNT_SID=your_sid

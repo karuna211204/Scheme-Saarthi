@@ -534,7 +534,7 @@ const SalesLeads = () => {
                             </form>
                             <div className="mt-6 pt-4 border-t border-border-light dark:border-border-dark flex items-start gap-3">
                                 <span className="material-symbols-outlined text-primary text-[20px]">auto_awesome</span>
-                                <p className="text-xs text-gray-500 leading-relaxed"><strong className="text-text-light dark:text-text-dark">AI Suggestion:</strong> Based on recent logs, there are 3 unassigned conversations that might be sales leads. <a className="text-black dark:text-white font-semibold underline decoration-primary decoration-2 underline-offset-2" href="#">Review now</a></p>
+                                <p className="text-xs text-gray-500 leading-relaxed"><strong className="text-text-light dark:text-text-dark">AI Suggestion:</strong> Based on recent logs, there are 3 unassigned conversations that might be sales leads. <button className="text-black dark:text-white font-semibold underline decoration-primary decoration-2 underline-offset-2" onClick={() => {}}>Review now</button></p>
                             </div>
                         </div>
                     </div>

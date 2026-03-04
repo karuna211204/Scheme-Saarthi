@@ -1,40 +1,138 @@
 import React, { useState, useRef } from 'react';
-import Tesseract from 'tesseract.js';
 
 const AadhaarOCR = ({ onExtractedData, onError }) => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const fileInputRef = useRef(null);
 
-    // Function to extract data from Aadhaar card using OCR
+    // OCR API endpoint
+    const OCR_API_URL = process.env.REACT_APP_API_URL ? 
+        `${process.env.REACT_APP_API_URL}/api/ocr/aadhaar` : 
+        'http://localhost:5000/api/ocr/aadhaar';
+
+    // Helper function to convert date format from MM/DD/YYYY to YYYY-MM-DD
+    const convertDateFormat = (dateString) => {
+        if (!dateString) return '';
+        
+        try {
+            // Handle MM/DD/YYYY format
+            const parts = dateString.split('/');
+            if (parts.length === 3) {
+                const [month, day, year] = parts;
+                // Ensure two-digit month and day
+                const formattedMonth = month.padStart(2, '0');
+                const formattedDay = day.padStart(2, '0');
+                return `${year}-${formattedMonth}-${formattedDay}`;
+            }
+            
+            // If already in YYYY-MM-DD format, return as is
+            if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+                return dateString;
+            }
+            
+            // For other formats, try to parse and format
+            const date = new Date(dateString);
+            if (!isNaN(date.getTime())) {
+                return date.toISOString().split('T')[0];
+            }
+            
+            return dateString; // Return original if can't parse
+        } catch (error) {
+            console.warn('Date conversion error:', error);
+            return dateString;
+        }
+    };
+
+    // Function to extract data from Aadhaar card using OCR service
     const extractAadhaarData = async (imageFile) => {
         setIsProcessing(true);
         setProgress(0);
 
         try {
-            const { data: { text } } = await Tesseract.recognize(
-                imageFile,
-                'eng',
-                {
-                    logger: (m) => {
-                        if (m.status === 'recognizing text') {
-                            setProgress(Math.round(m.progress * 100));
-                        }
-                    }
-                }
-            );
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append('image', imageFile);
 
-            // Parse the extracted text to get relevant information
-            const extractedData = parseAadhaarText(text);
-            
-            if (onExtractedData) {
-                onExtractedData(extractedData);
+            // Simulate progress updates
+            const progressInterval = setInterval(() => {
+                setProgress(prev => {
+                    if (prev < 90) return prev + 10;
+                    return prev;
+                });
+            }, 500);
+
+            console.log('🔄 Uploading image for OCR processing...');
+
+            // Make API call to OCR service
+            const response = await fetch(OCR_API_URL, {
+                method: 'POST',
+                body: formData,
+            });
+
+            const result = await response.json();
+            clearInterval(progressInterval);
+            setProgress(100);
+
+            console.log('📥 OCR Response:', result);
+
+            if (result.success && result.data) {
+                // Real OCR or demo mode success - extract data
+                const extractedData = {
+                    aadhaarNumber: result.data.aadhaarNumber || '',
+                    name: result.data.name || '',
+                    fatherName: result.data.fatherName || '',
+                    dateOfBirth: convertDateFormat(result.data.dateOfBirth) || '',
+                    gender: result.data.gender || '',
+                    address: result.data.address || '',
+                    pincode: result.data.pincode || '',
+                    mobile: result.data.mobile || '',
+                    email: result.data.email || ''
+                };
+
+                console.log('✅ Extracted data:', extractedData);
+                
+                if (onExtractedData) {
+                    onExtractedData(extractedData);
+                }
+                
+                // Show appropriate message for demo mode
+                if (result.demo_mode) {
+                    console.log('🧪 Demo mode active:', result.message);
+                }
+                
+            } else if (result.fallback && result.demo_data) {
+                // OCR service not available - show error with instructions
+                const errorMessage = result.error + '\n\n' + result.instructions;
+                console.warn('⚠️ OCR Service unavailable:', errorMessage);
+                if (onError) {
+                    onError(errorMessage);
+                }
+            } else {
+                // Handle OCR service errors
+                const errorMessage = result.error || 'Failed to process Aadhaar card. Please try again with a clearer image.';
+                console.error('❌ OCR Error:', errorMessage);
+                if (onError) {
+                    onError(errorMessage);
+                }
             }
             
         } catch (error) {
-            console.error('Error processing Aadhaar card:', error);
+            console.error('💥 Network/Processing Error:', error);
+            
+            let errorMessage = 'Failed to process Aadhaar card. ';
+            
+            if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                errorMessage += 'Network connection failed. Please check your connection.';
+            } else if (error.message.includes('413')) {
+                errorMessage += 'Image file is too large. Please use a smaller image.';
+            } else if (error.message.includes('400')) {
+                errorMessage += 'Invalid image format. Please use JPG, PNG, or other supported formats.';
+            } else {
+                errorMessage += 'Please try again or upload a different image.';
+            }
+            
             if (onError) {
-                onError('Failed to process Aadhaar card. Please try again with a clearer image.');
+                onError(errorMessage);
             }
         } finally {
             setIsProcessing(false);
@@ -42,136 +140,22 @@ const AadhaarOCR = ({ onExtractedData, onError }) => {
         }
     };
 
-    // Function to parse extracted text and extract useful information
-    const parseAadhaarText = (text) => {
-        const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-        const extractedData = {
-            aadhaarNumber: '',
-            name: '',
-            fatherName: '',
-            dateOfBirth: '',
-            gender: '',
-            address: '',
-            pincode: '',
-            mobile: '',
-            email: ''
-        };
-
-        // Patterns for different data extraction
-        const patterns = {
-            aadhaar: /\b\d{4}\s?\d{4}\s?\d{4}\b/g,
-            dateOfBirth: /\b(\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4})\b/g,
-            pincode: /\b\d{6}\b/g,
-            mobile: /\b[789]\d{9}\b/g,
-            email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g
-        };
-
-        // Extract Aadhaar number
-        const aadhaarMatch = text.match(patterns.aadhaar);
-        if (aadhaarMatch && aadhaarMatch.length > 0) {
-            extractedData.aadhaarNumber = aadhaarMatch[0].replace(/\s/g, '');
-        }
-
-        // Extract date of birth
-        const dobMatch = text.match(patterns.dateOfBirth);
-        if (dobMatch && dobMatch.length > 0) {
-            extractedData.dateOfBirth = dobMatch[0];
-        }
-
-        // Extract pincode
-        const pincodeMatch = text.match(patterns.pincode);
-        if (pincodeMatch && pincodeMatch.length > 0) {
-            extractedData.pincode = pincodeMatch[0];
-        }
-
-        // Extract mobile number
-        const mobileMatch = text.match(patterns.mobile);
-        if (mobileMatch && mobileMatch.length > 0) {
-            extractedData.mobile = mobileMatch[0];
-        }
-
-        // Extract email
-        const emailMatch = text.match(patterns.email);
-        if (emailMatch && emailMatch.length > 0) {
-            extractedData.email = emailMatch[0];
-        }
-
-        // Extract gender (look for keywords)
-        const genderKeywords = ['male', 'female', 'पुरुष', 'महिला', 'MALE', 'FEMALE'];
-        const foundGender = genderKeywords.find(keyword => 
-            text.toLowerCase().includes(keyword.toLowerCase())
-        );
-        if (foundGender) {
-            extractedData.gender = foundGender.toLowerCase().includes('male') ? 'Male' : 'Female';
-        }
-
-        // Extract name (usually the first meaningful line after any headers)
-        const namePatterns = [
-            /Name[\\s:]+([A-Za-z\\s]+)/i,
-            /नाम[\\s:]+([A-Za-z\\s\\u0900-\\u097F]+)/i
-        ];
-        
-        for (const pattern of namePatterns) {
-            const nameMatch = text.match(pattern);
-            if (nameMatch && nameMatch[1]) {
-                extractedData.name = nameMatch[1].trim();
-                break;
-            }
-        }
-
-        // If no pattern match, try to find name by position (usually after DOB or at the beginning)
-        if (!extractedData.name) {
-            const meaningful_lines = lines.filter(line => 
-                line.length > 3 && 
-                !line.match(/\\d{4}/) && 
-                !line.toLowerCase().includes('government') &&
-                !line.toLowerCase().includes('india') &&
-                !line.toLowerCase().includes('aadhaar')
-            );
-            
-            if (meaningful_lines.length > 0) {
-                extractedData.name = meaningful_lines[0];
-            }
-        }
-
-        // Extract father's name (look for patterns)
-        const fatherPatterns = [
-            /Father[\s:]+([A-Za-z\s]+)/i,
-            /S\/O[\s:]+([A-Za-z\s]+)/i,
-            /पिता[\s:]+([A-Za-z\s\u0900-\u097F]+)/i
-        ];
-        
-        for (const pattern of fatherPatterns) {
-            const fatherMatch = text.match(pattern);
-            if (fatherMatch && fatherMatch[1]) {
-                extractedData.fatherName = fatherMatch[1].trim();
-                break;
-            }
-        }
-
-        // Extract address (usually the longest line or lines after personal details)
-        const addressLines = lines.filter(line => 
-            line.length > 10 && 
-            !line.match(/\\b\\d{4}\\s?\\d{4}\\s?\\d{4}\\b/) && // not aadhaar number
-            !line.match(/\\b\\d{1,2}[\\/\\-]\\d{1,2}[\\/\\-]\\d{4}\\b/) && // not date
-            line !== extractedData.name &&
-            line !== extractedData.fatherName
-        );
-        
-        if (addressLines.length > 0) {
-            extractedData.address = addressLines.join(', ');
-        }
-
-        return extractedData;
-    };
-
     const handleFileSelect = (event) => {
         const file = event.target.files[0];
         if (file && file.type.startsWith('image/')) {
+            // Validate file size (16MB limit)
+            const maxSize = 16 * 1024 * 1024; // 16MB
+            if (file.size > maxSize) {
+                if (onError) {
+                    onError('Image file is too large. Please use an image smaller than 16MB.');
+                }
+                return;
+            }
+            
             extractAadhaarData(file);
         } else {
             if (onError) {
-                onError('Please select a valid image file.');
+                onError('Please select a valid image file (JPG, PNG, GIF, BMP, TIFF).');
             }
         }
     };
@@ -202,6 +186,9 @@ const AadhaarOCR = ({ onExtractedData, onError }) => {
                             ></div>
                         </div>
                         <p className="text-sm text-gray-600 dark:text-gray-400">{progress}% complete</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            This may take up to 30 seconds for clear results...
+                        </p>
                     </div>
                 ) : (
                     <div className="upload-prompt">
@@ -222,8 +209,16 @@ const AadhaarOCR = ({ onExtractedData, onError }) => {
                             Select Aadhaar Image
                         </button>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                            Supports JPG, PNG, JPEG formats
+                            Supports JPG, PNG, JPEG, GIF, BMP, TIFF formats (max 16MB)
                         </p>
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                            <p className="text-xs text-blue-600 dark:text-blue-400">
+                                💡 <strong>Tips for best results:</strong><br/>
+                                • Ensure good lighting and clear image<br/>
+                                • Keep the card flat and fully visible<br/>
+                                • Avoid shadows or glare
+                            </p>
+                        </div>
                     </div>
                 )}
             </div>

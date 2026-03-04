@@ -54,7 +54,7 @@ const Login = () => {
             <h2 className="text-[#181811] dark:text-white text-xl font-bold leading-tight tracking-[-0.015em]">Scheme Saarthi</h2>
           </div>
           <div className="flex items-center gap-3">
-            <a className="hidden sm:block text-sm font-medium text-[#181811] dark:text-[#e8e8e3] opacity-70 hover:opacity-100 px-4 py-2" href="#">Help Center</a>
+            <button className="hidden sm:block text-sm font-medium text-[#181811] dark:text-[#e8e8e3] opacity-70 hover:opacity-100 px-4 py-2" onClick={() => {}}>Help Center</button>
           </div>
         </header>
         <div className="layout-container flex h-full grow flex-col justify-center items-center py-10 px-4 sm:px-10">
@@ -128,7 +128,7 @@ const Login = () => {
                       <input className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary dark:bg-[#2d2c1b] dark:border-[#444335]" type="checkbox" />
                       <span className="text-sm font-medium text-[#181811]/70 dark:text-white/70 group-hover:text-[#181811] dark:group-hover:text-white transition-colors">Remember me</span>
                     </label>
-                    <a className="text-sm font-bold text-[#181811] dark:text-white hover:underline decoration-primary decoration-2 underline-offset-4" href="#">Forgot password?</a>
+                    <button className="text-sm font-bold text-[#181811] dark:text-white hover:underline decoration-primary decoration-2 underline-offset-4" onClick={() => {}}>Forgot password?</button>
                   </div>
                   <button className="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-full h-14 px-5 bg-primary hover:bg-[#eae605] text-[#181811] shadow-lg shadow-primary/20 transition-all transform active:scale-[0.98]" type="submit">
                     <span className="text-base font-bold leading-normal tracking-[0.015em]">{authType === 'login' ? 'Log In' : 'Sign Up'}</span>
@@ -147,7 +147,7 @@ const Login = () => {
                   </div>
                 )}
                 <p className="text-center text-sm text-[#8c8b5f] dark:text-[#a0a090] mt-2">
-                  By joining, you agree to our <a className="font-bold text-[#181811] dark:text-white hover:underline" href="#">Terms of Service</a> and <a className="font-bold text-[#181811] dark:text-white hover:underline" href="#">Privacy Policy</a>.
+                  By joining, you agree to our <button className="font-bold text-[#181811] dark:text-white hover:underline" onClick={() => {}}>Terms of Service</button> and <button className="font-bold text-[#181811] dark:text-white hover:underline" onClick={() => {}}>Privacy Policy</button>.
                 </p>
               </div>
             </div>

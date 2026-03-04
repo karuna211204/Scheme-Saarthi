@@ -343,7 +343,7 @@ const CustomerOverview = () => {
                                                          <p className="text-xs text-[#5c5b4f] dark:text-[#cbcb9c] line-clamp-2 leading-relaxed">
                                                              {latestTranscript.transcript}
                                                          </p>
-                                                         <a className="inline-flex items-center gap-1 text-xs font-bold mt-2 hover:underline" href="#">View Transcript <span className="material-symbols-outlined text-[10px]">open_in_new</span></a>
+                                                         <button className="inline-flex items-center gap-1 text-xs font-bold mt-2 hover:underline" onClick={() => {}}>View Transcript <span className="material-symbols-outlined text-[10px]">open_in_new</span></button>
                                                      </div>
                                                 ) : <span className="text-xs italic text-[#8c8b5f]">No recent chats</span>}
                                             </td>

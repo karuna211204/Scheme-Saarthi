@@ -6,9 +6,9 @@ const Footer = () => {
             <div className="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
                 <p className="text-xs text-[#8c8b5f]">© 2026 Scheme Saarthi - Empowering Rural India. All rights reserved.</p>
                 <div className="flex gap-6">
-                    <a className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" href="#">Privacy</a>
-                    <a className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" href="#">Terms</a>
-                    <a className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" href="#">Help</a>
+                    <button className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" onClick={() => {}}>Privacy</button>
+                    <button className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" onClick={() => {}}>Terms</button>
+                    <button className="text-xs text-[#8c8b5f] hover:text-black dark:hover:text-white" onClick={() => {}}>Help</button>
                 </div>
             </div>
         </footer>

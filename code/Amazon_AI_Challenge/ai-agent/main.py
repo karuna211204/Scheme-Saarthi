@@ -26,6 +26,10 @@ logging.basicConfig(level=logging.INFO)
 # Global transcript storage
 conversation_transcript = []
 
+# Session management for concurrency control
+_active_sessions = {}  # room_name -> {"lock": asyncio.Lock(), "session_id": str, "started_at": datetime}
+_sessions_lock = asyncio.Lock()  # Global lock for session map access
+
 
 class SchemeSaarthiAgent(Agent):
     """Scheme Saarthi AI Agent that helps citizens discover government schemes"""
@@ -115,7 +119,41 @@ async def entrypoint(ctx: agents.JobContext):
     citizen_phone=""
     user_id=""
     
+    # Initialize variables for cleanup in finally block
+    session_started = False
+    mcp_server = None
+    rag_server = None
+    cleanup_tasks = set()
+    agent = None
+    session = None
+    room_session_lock = None  # Track lock for this session
+    
     try:
+        # CONCURRENCY CONTROL: Check if session already exists for this room
+        room_name = ctx.room.name
+        
+        async with _sessions_lock:
+            if room_name in _active_sessions:
+                existing_session = _active_sessions[room_name]
+                logger.warning(f"⚠️ Room '{room_name}' already has an active session started at {existing_session['started_at']}")
+                logger.warning(f"⚠️ Session ID: {existing_session['session_id']}")
+                logger.warning(f"🚫 Rejecting duplicate session creation - ghost session prevented!")
+                return  # Exit to prevent duplicate session
+            
+            # Create session entry with lock
+            session_id = f"session-{room_name}-{datetime.now(timezone.utc).timestamp()}"
+            room_session_lock = asyncio.Lock()
+            _active_sessions[room_name] = {
+                "lock": room_session_lock,
+                "session_id": session_id,
+                "started_at": datetime.now(timezone.utc).isoformat()
+            }
+            logger.info(f"✅ Session registered: {session_id}")
+        
+        # Acquire room-specific lock for the duration of this session
+        await room_session_lock.acquire()
+        logger.info(f"🔒 Session lock acquired for room: {room_name}")
+        
         logger.info("="*60)
         logger.info("🇮🇳 SCHEME SAARTHI AI AGENT STARTING")
         logger.info("="*60)
@@ -435,8 +473,10 @@ IMPORTANT:
                 logger.info(f"👋 Participant disconnected: {participant.identity}")
                 logger.info("="*60)
                 
-                # Perform session cleanup
-                asyncio.create_task(cleanup_session_on_disconnect(participant))
+                # Perform session cleanup and track the task
+                task = asyncio.create_task(cleanup_session_on_disconnect(participant))
+                cleanup_tasks.add(task)
+                task.add_done_callback(cleanup_tasks.discard)
                 
             except Exception as e:
                 logger.error(f"❌ Error in disconnect handler: {e}", exc_info=True)
@@ -531,16 +571,17 @@ IMPORTANT:
             except Exception as e:
                 logger.error(f"❌ Error in session cleanup: {e}", exc_info=True)
         
-        # Start the session
+        # Start the session with proper lifecycle management
         logger.info("🚀 Starting agent session...")
         try:
-            # Set agent identity BEFORE starting (we'll update it after)
+            # Set agent identity BEFORE starting
             agent.agent_identity = agent_identity
             
             await session.start(
                 room=ctx.room,
                 agent=agent,
             )
+            session_started = True
             logger.info("✅ Agent session started successfully")
             
             # NOW get the actual agent identity from the local participant
@@ -550,9 +591,6 @@ IMPORTANT:
             
         except Exception as start_error:
             logger.error(f"❌ Failed to start agent session: {start_error}", exc_info=True)
-            # Try to recover by reconnecting
-            logger.info("🔄 Attempting to recover...")
-            await asyncio.sleep(2)
             raise
         
         # Don't generate initial reply - let the agent respond to user input
@@ -564,6 +602,15 @@ IMPORTANT:
         
         logger.info("✅ Agent session running with transcript capture on disconnect")
         
+        # Wait for session to complete (blocks until session ends)
+        # This is the proper way to keep the session alive
+        try:
+            # The session will run until explicitly shut down or disconnected
+            # No need for additional waits - session.start() handles this
+            pass
+        except asyncio.CancelledError:
+            logger.info("🛑 Agent session cancelled")
+        
     except asyncio.CancelledError:
         logger.info("🛑 Agent session cancelled gracefully")
         raise
@@ -571,15 +618,73 @@ IMPORTANT:
         logger.error(f"❌ Error in entrypoint: {e}", exc_info=True)
         raise
     finally:
-        # Final cleanup
+        # Proper cleanup with session shutdown
         try:
-            logger.info("🧹 Cleaning up agent session...")
+            logger.info("🧹 Starting final cleanup...")
+            
+            # 1. Release session lock and remove from active sessions
+            if room_session_lock and room_session_lock.locked():
+                try:
+                    room_name = ctx.room.name
+                    logger.info(f"🔓 Releasing session lock for room: {room_name}")
+                    room_session_lock.release()
+                    
+                    # Remove from active sessions
+                    async with _sessions_lock:
+                        if room_name in _active_sessions:
+                            del _active_sessions[room_name]
+                            logger.info(f"✅ Session removed from active sessions: {room_name}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error releasing session lock: {e}")
+            
+            # 2. Shut down the session if it was started
+            if session_started and session:
+                try:
+                    logger.info("🛑 Shutting down agent session...")
+                    await session.shutdown()
+                    logger.info("✅ Agent session shut down successfully")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error shutting down session: {e}")
+            
+            # 3. Wait for all background cleanup tasks to complete
+            if cleanup_tasks:
+                logger.info(f"⏳ Waiting for {len(cleanup_tasks)} background tasks...")
+                try:
+                    await asyncio.gather(*cleanup_tasks, return_exceptions=True)
+                    logger.info("✅ All background tasks completed")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error waiting for cleanup tasks: {e}")
+            
+            # 4. Close MCP server connections
+            if mcp_server:
+                try:
+                    logger.info("🔌 Closing main MCP server connection...")
+                    await mcp_server.close()
+                    logger.info("✅ Main MCP server closed")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error closing main MCP server: {e}")
+            
+            if rag_server:
+                try:
+                    logger.info("🔌 Closing RAG MCP server connection...")
+                    await rag_server.close()
+                    logger.info("✅ RAG MCP server closed")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error closing RAG MCP server: {e}")
+            
+            # 5. Save final transcript if available
             if agent and hasattr(agent, 'transcript'):
-                transcript_text = agent.get_transcript()
-                if transcript_text:
-                    logger.info(f"📊 Final transcript length: {len(transcript_text)} chars")
+                try:
+                    transcript_text = agent.get_transcript()
+                    if transcript_text:
+                        logger.info(f"📊 Final transcript length: {len(transcript_text)} chars")
+                except Exception as e:
+                    logger.warning(f"⚠️ Error getting final transcript: {e}")
+            
+            logger.info("✅ Final cleanup completed")
+            
         except Exception as e:
-            logger.error(f"⚠️ Error in cleanup: {e}")
+            logger.error(f"❌ Error in final cleanup: {e}", exc_info=True)
 
 
 if __name__ == "__main__":

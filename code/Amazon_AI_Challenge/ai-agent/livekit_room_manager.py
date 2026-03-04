@@ -124,6 +124,7 @@ async def initiate_transfer_to_human(room_name: str, ai_agent_identity: str = "a
     This function ONLY adds SIP call and waits for human to connect.
     AI agent removal is handled by session.shutdown() in main.py
     """
+    api_client = None
     try:
         logger.info(f"🔄 Starting transfer in room: {room_name}")
         
@@ -139,17 +140,22 @@ async def initiate_transfer_to_human(room_name: str, ai_agent_identity: str = "a
         
         # Step 2: Wait for human to connect (optional - don't block)
         logger.info("⏳ Human agent being called...")
+        
+        if not (LIVEKIT_URL and LIVEKIT_API_KEY and LIVEKIT_API_SECRET):
+            logger.warning("⚠️ Missing LiveKit credentials, skipping participant check")
+            return {"success": True, "warning": "Could not verify human connection"}
+        
         api_client = api.LiveKitAPI(
             url=LIVEKIT_URL,
             api_key=LIVEKIT_API_KEY,
             api_secret=LIVEKIT_API_SECRET,
         )
         
-        try:
-            human_connected = False
-            for i in range(15):  # Wait up to 15 seconds max
-                await asyncio.sleep(1)
-                
+        human_connected = False
+        for i in range(15):  # Wait up to 15 seconds max
+            await asyncio.sleep(1)
+            
+            try:
                 participants_response = await api_client.room.list_participants(
                     api.ListParticipantsRequest(room=room_name)
                 )
@@ -163,12 +169,12 @@ async def initiate_transfer_to_human(room_name: str, ai_agent_identity: str = "a
                 
                 if human_connected:
                     break
-            
-            if not human_connected:
-                logger.info("⏳ Human agent still connecting...")
-                        
-        finally:
-            await api_client.aclose()
+            except Exception as e:
+                logger.warning(f"⚠️ Error checking participants: {e}")
+                break
+        
+        if not human_connected:
+            logger.info("⏳ Human agent still connecting...")
         
         logger.info("✅ Transfer initiated - AI will disconnect via session.shutdown()")
         return {"success": True}
@@ -176,4 +182,12 @@ async def initiate_transfer_to_human(room_name: str, ai_agent_identity: str = "a
     except Exception as e:
         logger.error(f"❌ Transfer failed: {e}")
         return {"success": False, "error": str(e)}
+    finally:
+        # Always close the API client
+        if api_client:
+            try:
+                await api_client.aclose()
+                logger.debug("✅ API client closed")
+            except Exception as e:
+                logger.warning(f"⚠️ Error closing API client: {e}")
 

@@ -223,9 +223,9 @@ const Home = () => {
                         <span className="text-sm font-bold text-text-light dark:text-text-dark">Scheme Saarthi</span>
                     </div>
                     <div className="flex gap-8">
-                        <a className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" href="#">Privacy Policy</a>
-                        <a className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" href="#">Terms of Service</a>
-                        <a className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" href="#">Contact Support</a>
+                        <button className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" onClick={() => {}}>Privacy Policy</button>
+                        <button className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" onClick={() => {}}>Terms of Service</button>
+                        <button className="text-sm text-[#8c8b5f] hover:text-black dark:hover:text-white transition-colors" onClick={() => {}}>Contact Support</button>
                     </div>
                     <p className="text-xs text-[#8c8b5f]">© 2026 Scheme Saarthi - Empowering Rural India</p>
                 </div>
