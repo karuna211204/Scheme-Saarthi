@@ -23,6 +23,16 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
+# Check AI provider AFTER loading .env
+AI_PROVIDER = os.getenv("AI_PROVIDER", "gemini").lower()
+if AI_PROVIDER == "bedrock":
+    try:
+        from livekit.plugins import aws
+        logger.info(f"✅ AWS plugins loaded for provider: {AI_PROVIDER}")
+    except ImportError:
+        logger.error("❌ AWS plugins not installed. Run: pip install 'livekit-agents[aws]==1.4.0'")
+        AI_PROVIDER = "gemini"  # Fallback to gemini
+
 # Global transcript storage
 conversation_transcript = []
 
@@ -35,56 +45,58 @@ class SchemeSaarthiAgent(Agent):
     """Scheme Saarthi AI Agent that helps citizens discover government schemes"""
     
     def __init__(self, tools: list = None, retry_on_error: bool = False, citizen_context: str = "", room_name: str = "", agent_identity: str = "") -> None:
-        # Use more stable model configuration to avoid 1011 errors
-        model_config = {
-            "model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-native-audio-preview-09-2025"),
-            "voice": "Kore",  # Indian female voice
-            "temperature": 0.7,  # Slightly lower temperature
-        }
-        
-        # If retrying, use even more conservative settings
-        if retry_on_error:
-            model_config["temperature"] = 0.6
-            logger.info("Using conservative model settings for retry")
+        import uuid
         
         # Generate unique citizen session ID
-        import uuid
-        self.citizen_id = str(uuid.uuid4())[:8]  # Short unique ID
-        
-        # Store room name and agent identity for transfer functionality
+        self.citizen_id = str(uuid.uuid4())[:8]
         self.room_name = room_name
         self.agent_identity = agent_identity
+        self.transcript = []
         
         # Inject citizen_id and citizen context into instructions
         instructions_with_id = f"{AGENT_INSTRUCTION}\n\n🆔 YOUR CITIZEN SESSION ID: {self.citizen_id}\nUse this when creating records."
-        
-        # Add citizen context if provided
         if citizen_context:
             instructions_with_id += citizen_context
         
+        # Configure LLM based on provider
+        if AI_PROVIDER == "bedrock":
+            logger.info("🔧 Using AWS Bedrock Claude 3.5 Haiku")
+            llm = aws.LLM(
+                model=os.getenv("BEDROCK_MODEL_ID", "anthropic.claude-3-5-haiku-20241022-v1:0"),
+                region=os.getenv("AWS_REGION", "us-east-1"),
+                temperature=0.6 if retry_on_error else 0.7,
+            )
+        else:
+            logger.info("🔧 Using Google Gemini Realtime Model")
+            model_config = {
+                "model": os.getenv("GEMINI_MODEL", "models/gemini-2.5-flash-native-audio-preview-09-2025"),
+                "voice": "Kore",
+                "temperature": 0.6 if retry_on_error else 0.7,
+            }
+            llm = realtime.RealtimeModel(**model_config)
+        
+        # Initialize parent Agent class
         super().__init__(
             instructions=instructions_with_id,
-            llm=realtime.RealtimeModel(**model_config),
+            llm=llm,
             tools=tools or [],
             allow_interruptions=True,
         )
-        self.transcript = []
+        
         logger.info(f"🆔 Generated Citizen Session ID: {self.citizen_id}")
         logger.info(f"🏠 Room Name stored: {self.room_name}")
         logger.info(f"🤖 Agent Identity stored: {self.agent_identity}")
     
     def get_transcript(self) -> str:
-        """Return the full conversation transcript as a formatted string"""
+        """Return formatted transcript"""
         if not self.transcript:
             return ""
-        
         transcript_lines = []
         for item in self.transcript:
             role = item.get('role', 'unknown')
             content = item.get('content', '')
             timestamp = item.get('timestamp', '')
             transcript_lines.append(f"[{timestamp}] {role.upper()}: {content}")
-        
         return "\n".join(transcript_lines)
 
 
@@ -127,6 +139,8 @@ async def entrypoint(ctx: agents.JobContext):
     agent = None
     session = None
     room_session_lock = None  # Track lock for this session
+    # Note: session_transcript removed - now stored as agent.transcript
+    citizen_id = "unknown"  # Initialize early for cleanup access
     
     try:
         # CONCURRENCY CONTROL: Check if session already exists for this room
@@ -329,56 +343,36 @@ IMPORTANT:
         logger.info("✅ Citizen context prepared for agent instructions")
         
         # Create agent with all MCP tools and citizen context
-        logger.info("Creating SchemeSaarthiAgent with citizen context...")
+        logger.info(f"📦 Creating SchemeSaarthiAgent with {AI_PROVIDER.upper()} provider...")
         agent = SchemeSaarthiAgent(
-            tools=tools, 
-            retry_on_error=False, 
+            tools=tools,
+            retry_on_error=False,
             citizen_context=citizen_context,
             room_name=room_name,
             agent_identity=agent_identity
         )
         
-        # Update agent's citizen_id to use phone for better tracking
-        if citizen_phone:
-            agent.citizen_id = citizen_phone.replace("+", "").replace(" ", "").replace("-", "")
-            logger.info(f"🆔 Using phone as citizen ID: {agent.citizen_id}")
+        #Create session (separate from agent)
+        if AI_PROVIDER == "bedrock":
+            logger.info("🔧 Configuring AWS STT/TTS for session...")
+            session = AgentSession(
+                stt=aws.STT(
+                    language=os.getenv("AWS_TRANSCRIBE_LANGUAGE", "hi-IN"),
+                    region=os.getenv("AWS_TRANSCRIBE_REGION", "us-east-1"),
+                ),
+                tts=aws.TTS(
+                    voice=os.getenv("AWS_POLLY_VOICE_ID", "Aditi"),
+                    language=os.getenv("AWS_POLLY_LANGUAGE", "hi-IN"),
+                    speech_engine=os.getenv("AWS_POLLY_ENGINE", "standard"),
+                    region=os.getenv("AWS_REGION", "us-east-1"),  # MISSING! Polly needs region
+                ),
+            )
+            logger.info("✅ AWS STT (Transcribe) and TTS (Polly) configured")
+        else:
+            # For Gemini, STT/TTS is built into the realtime model
+            session = AgentSession()
         
-        logger.info("✅ Agent created successfully with citizen context injected")
-        
-        # Create agent session without llm (it's in the Agent now)
-        logger.info("📦 Creating agent session...")
-        session = AgentSession()
-        logger.info("✅ Agent session created")
-        
-        # Set up conversation tracking with transcript
-        @session.on("conversation_item_added")
-        def on_conversation_item_added(event):
-            """Track all conversation items for transcript"""
-            try:
-                from datetime import datetime
-                timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                
-                role = event.item.role if hasattr(event.item, 'role') else 'unknown'
-                content = event.item.text_content if hasattr(event.item, 'text_content') else ''
-                
-                if content and content.strip():
-                    transcript_entry = {
-                        'role': role,
-                        'content': content.strip(),
-                        'timestamp': timestamp
-                    }
-                    
-                    # Safely append to transcript
-                    try:
-                        agent.transcript.append(transcript_entry)
-                        conversation_transcript.append(transcript_entry)
-                    except Exception as append_error:
-                        logger.warning(f"⚠️ Could not append to transcript: {append_error}")
-                    
-                    role_display = role.upper() if role in ['user', 'assistant'] else role
-                    logger.info(f"📝 [{role_display}] {content[:100]}{'...' if len(content) > 100 else ''}")
-            except Exception as e:
-                logger.error(f"❌ Error tracking conversation: {e}")
+        logger.info("✅ Agent created with tools and configuration")
         
         # ============= TAVUS CODE COMMENTED OUT - NOW USING SIMLI =============
         # tavus_api_key = os.getenv("TAVUS_API_KEY")
@@ -484,16 +478,24 @@ IMPORTANT:
         async def cleanup_session_on_disconnect(participant):
             """Async cleanup when participant disconnects"""
             try:
-                # Get the transcript
-                transcript_text = agent.get_transcript()
+                # Format transcript
+                transcript_text = ""
+                if agent and agent.transcript and len(agent.transcript) > 0:
+                    transcript_lines = []
+                    for item in agent.transcript:
+                        role = item.get('role', 'unknown')
+                        content = item.get('content', '')
+                        timestamp = item.get('timestamp', '')
+                        transcript_lines.append(f"[{timestamp}] {role.upper()}: {content}")
+                    transcript_text = "\n".join(transcript_lines)
                 
                 if transcript_text and len(transcript_text) > 10:
                     logger.info(f"💾 Saving transcript ({len(transcript_text)} chars)...")
                     logger.info("📝 Transcript preview:")
                     logger.info(transcript_text[:500] + "..." if len(transcript_text) > 500 else transcript_text)
                     
-                    # Save transcript to backend using citizen_id
-                    citizen_id = agent.citizen_id
+                    # Use citizen_id from agent
+                    citizen_id = agent.citizen_id if agent else "unknown"
                     logger.info(f"🆔 Citizen ID: {citizen_id}")
                     
                     # Call backend API to save transcript
@@ -547,7 +549,7 @@ IMPORTANT:
                         cleanup_url = f"{backend_url}/api/livekit/end-call"
                         payload = {
                             "roomName": room_name,
-                            "participant_identity": agent.agent_identity
+                            "participant_identity": agent_identity
                         }
                         
                         logger.info(f"🧹 Cleaning up LiveKit session: {room_name}")
@@ -584,9 +586,8 @@ IMPORTANT:
             session_started = True
             logger.info("✅ Agent session started successfully")
             
-            # NOW get the actual agent identity from the local participant
+            # Get the actual agent identity from the local participant
             actual_agent_identity = ctx.room.local_participant.identity if ctx.room.local_participant else agent_identity
-            agent.agent_identity = actual_agent_identity
             logger.info(f"✅ Agent identity confirmed: {actual_agent_identity}")
             
         except Exception as start_error:
@@ -602,12 +603,10 @@ IMPORTANT:
         
         logger.info("✅ Agent session running with transcript capture on disconnect")
         
-        # Wait for session to complete (blocks until session ends)
-        # This is the proper way to keep the session alive
+        # Keep the session alive - wait forever until cancelled or room closes
         try:
-            # The session will run until explicitly shut down or disconnected
-            # No need for additional waits - session.start() handles this
-            pass
+            # Wait indefinitely - session will run until participant disconnects
+            await asyncio.Event().wait()
         except asyncio.CancelledError:
             logger.info("🛑 Agent session cancelled")
         
@@ -673,13 +672,19 @@ IMPORTANT:
                     logger.warning(f"⚠️ Error closing RAG MCP server: {e}")
             
             # 5. Save final transcript if available
-            if agent and hasattr(agent, 'transcript'):
+            if agent and agent.transcript and len(agent.transcript) > 0:
                 try:
-                    transcript_text = agent.get_transcript()
+                    transcript_lines = []
+                    for item in agent.transcript:
+                        role = item.get('role', 'unknown')
+                        content = item.get('content', '')
+                        timestamp = item.get('timestamp', '')
+                        transcript_lines.append(f"[{timestamp}] {role.upper()}: {content}")
+                    transcript_text = "\\n".join(transcript_lines)
                     if transcript_text:
                         logger.info(f"📊 Final transcript length: {len(transcript_text)} chars")
                 except Exception as e:
-                    logger.warning(f"⚠️ Error getting final transcript: {e}")
+                    logger.warning(f"⚠️ Error formatting final transcript: {e}")
             
             logger.info("✅ Final cleanup completed")
             
