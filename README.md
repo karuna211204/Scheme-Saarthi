@@ -93,6 +93,7 @@ powershell -ExecutionPolicy Bypass -File start-all.ps1
 ```
 
 Servers will start on:
+- **frontend API**: `http://localhost:3000`
 - **Backend API**: `http://localhost:5000`
 - **RAG Server**: `http://localhost:8002`
 - **MCP Server**: `http://localhost:8001`
@@ -172,6 +173,9 @@ npm start
 ### 3. AI Agent Setup
 ```bash
 cd code/Amazon_AI_Challenge/ai-agent
+
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
 # Create .env file with:
@@ -182,12 +186,16 @@ pip install -r requirements.txt
 # TWILIO_ACCOUNT_SID=your_twilio_sid
 # TWILIO_AUTH_TOKEN=your_twilio_token
 
-python main.py
+
+
+python main.py start
 ```
 
 ### 4. RAG Server Setup
 ```bash
 cd code/Amazon_AI_Challenge/rag-server
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 
 # Add scheme PDFs to knowledge_base/ folder
@@ -199,9 +207,9 @@ python mcp_rag_server.py
 
 ### 5. MCP Server Setup
 ```bash
-cd mcp-server
-npm install
-node scheme-mcp-server.js
+cd code/Amazon_AI_Challenge/ai-agent
+source venv/bin/activate
+python mcp_server1.py
 ```
 
 ## 🎨 Features
